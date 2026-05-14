@@ -1,12 +1,10 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-
 import {
     Menu,
     X,
     ShieldCheck,
 } from "lucide-react"
-
 import PictureProfile from "../../private/PictureProfile/index"
 
 function Navbar() {
@@ -24,7 +22,7 @@ function Navbar() {
                     to="/"
                     className="flex items-center gap-3 cursor-pointer"
                 >
-                    <div className="w-10 h-10 rounded-md bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg">
+                    <div className="w-10 h-10 rounded-md bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg">
                         <ShieldCheck className="w-5 h-5 text-white" />
                     </div>
 

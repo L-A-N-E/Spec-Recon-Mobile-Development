@@ -17,8 +17,8 @@ function Footer() {
 
                         <div className="flex items-center gap-4">
 
-                            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur flex items-center justify-center shadow-lg">
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400" />
+                            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/3 backdrop-blur flex items-center justify-center shadow-lg">
+                                <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-cyan-400" />
                             </div>
 
                             <div>
@@ -53,6 +53,12 @@ function Footer() {
                             </div>
 
                             <div className="flex flex-col gap-3 text-sm text-white/45">
+                                <Link
+                                    to="/"
+                                    className="hover:text-white transition-colors"
+                                >
+                                    Home
+                                </Link>
                                 <Link
                                     to="/"
                                     className="hover:text-white transition-colors"
@@ -110,9 +116,9 @@ function Footer() {
                                     Desenvolvido por
                                 </div>
 
-                                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.03]">
+                                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/3">
 
-                                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400" />
+                                    <div className="w-3 h-3 rounded-full bg-linear-to-br from-blue-500 to-cyan-400" />
 
                                     <div className="font-semibold tracking-wide text-white/80">
                                         LANE

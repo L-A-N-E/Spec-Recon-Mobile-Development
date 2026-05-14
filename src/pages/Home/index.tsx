@@ -11,7 +11,7 @@ import {
 
 import { Link } from "react-router-dom"
 
-import Button from "../../components/Button"
+import Button from "../../components/public/Button"
 
 const modules = [
     {
@@ -128,7 +128,7 @@ function Home() {
             {/* SOBRE */}
             <section
                 id="sobre"
-                className="border-t border-white/10 border-b border-white/10 bg-white/[0.02]"
+                className="border-t border-white/10 border-b bg-white/2"
             >
                 <div className="max-w-7xl mx-auto px-6 lg:px-10 py-24">
 
@@ -179,7 +179,7 @@ function Home() {
                             <Link
                                 key={module.code}
                                 to={module.to}
-                                className="group p-8 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] hover:border-blue-500/30 transition-all"
+                                className="group p-8 rounded-2xl border border-white/10 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all"
                             >
 
                                 <div className="flex items-start justify-between mb-8">
@@ -209,7 +209,7 @@ function Home() {
             {/* TECNOLOGIA */}
             <section
                 id="tecnologia"
-                className="border-y border-white/10 bg-white/[0.02]"
+                className="border-y border-white/10 bg-white/2"
             >
                 <div className="max-w-7xl mx-auto px-6 lg:px-10 py-24 grid md:grid-cols-3 gap-10">
 

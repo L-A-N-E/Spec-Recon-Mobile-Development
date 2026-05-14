@@ -1,7 +1,5 @@
 import { useState, useMemo } from "react"
-
 import { Link } from "react-router-dom"
-
 import {
     ShieldPlus,
     ArrowRight,
@@ -10,8 +8,7 @@ import {
     Check,
     X
 } from "lucide-react"
-
-import Button from "../../../components/Button"
+import Button from "../../../components/public/Button"
 
 function Signup() {
 
@@ -153,7 +150,7 @@ function Signup() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_40%)]" />
 
             {/* Grid */}
-            <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:80px_80px]" />
+            <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-size-[80px_80px]" />
 
             <div className="relative w-full max-w-2xl">
 
@@ -179,7 +176,7 @@ function Signup() {
                 </div>
 
                 {/* Card */}
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-8 shadow-2xl">
+                <div className="rounded-3xl border border-white/10 bg-white/3 backdrop-blur-xl p-8 shadow-2xl">
 
                     <form
                         onSubmit={handleSubmit}

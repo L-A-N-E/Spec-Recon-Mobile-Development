@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom"
-
 import {
     ArrowLeft,
     ShieldAlert,
 } from "lucide-react"
-
-import Button from "../../components/Button"
+import Button from "../../components/public/Button"
 
 function Error() {
     return (
@@ -15,7 +13,7 @@ function Error() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.12),transparent_45%)]" />
 
             {/* Grid */}
-            <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:80px_80px]" />
+            <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-size-[80px_80px]" />
 
             <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
 
@@ -34,7 +32,7 @@ function Error() {
                     Página não
                     <br />
 
-                    <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                    <span className="bg-linear-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
                         encontrada
                     </span>
                 </h1>

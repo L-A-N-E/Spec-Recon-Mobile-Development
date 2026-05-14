@@ -93,12 +93,12 @@ function Login() {
 
                         {/* Forgot */}
                         <div className="flex justify-end">
-                            <button
-                                type="button"
+                            <Link
+                                to="/forgot-password"
                                 className="text-sm text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
                             >
                                 Esqueci minha senha
-                            </button>
+                            </Link>
                         </div>
 
                         {/* Submit */}

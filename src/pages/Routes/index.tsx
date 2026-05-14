@@ -17,6 +17,7 @@ import Assistant from '../Assistant/index.tsx'
 import Profile from '../Profile/index.tsx'
 import Terms_Of_Use from "../TermsOfUse/index.tsx"
 import PrivacyPolicy from "../PrivacyPolicy/index.tsx"
+import ForgotPassword from "../Auth/ForgotPassword/index.tsx"
 
 export const router = createBrowserRouter([
     {
@@ -42,6 +43,15 @@ export const router = createBrowserRouter([
                 element: (
                     <PublicRoute>
                         <Signup />
+                    </PublicRoute>
+                )
+            },
+
+            {
+                path: "/forgot-password",
+                element: (
+                    <PublicRoute>
+                        <ForgotPassword />
                     </PublicRoute>
                 )
             },

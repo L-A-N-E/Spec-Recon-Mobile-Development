@@ -52,7 +52,7 @@ function Home() {
         <div className="min-h-screen bg-black text-white overflow-hidden">
 
             {/* HERO */}
-            <section className="relative overflow-hidden border-b border-white/10">
+            <section className="relative overflow-hidden border-b border-white/10" id="home">
 
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.25),transparent_40%)]" />
 
@@ -87,9 +87,9 @@ function Home() {
 
                         <div className="mt-10 flex flex-wrap gap-4">
 
-                            <Link to="/signup">
+                            <Link to="/sign-up">
                                 <Button variant="primary">
-                                    Solicitar acesso
+                                    Cadastro Corporativo
                                     <ArrowRight className="w-4 h-4" />
                                 </Button>
                             </Link>

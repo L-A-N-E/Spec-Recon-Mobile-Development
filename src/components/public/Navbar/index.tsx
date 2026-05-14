@@ -45,6 +45,12 @@ function Navbar() {
                         to="/"
                         className="hover:text-white transition-colors cursor-pointer"
                     >
+                        Home
+                    </Link>
+                    <Link
+                        to="/"
+                        className="hover:text-white transition-colors cursor-pointer"
+                    >
                         Sobre
                     </Link>
 
@@ -73,7 +79,7 @@ function Navbar() {
                                 </button>
                             </Link>
 
-                            <Link to="/signup">
+                            <Link to="/sign-up">
                                 <button className="h-10 px-5 rounded-md bg-white text-black text-sm font-medium hover:bg-white/90 transition-colors cursor-pointer">
                                     Criar conta
                                 </button>
@@ -108,6 +114,13 @@ function Navbar() {
                                 className="hover:text-white transition-colors"
                                 onClick={() => setMobileOpen(false)}
                             >
+                                Home
+                            </Link>
+                            <Link
+                                to="/"
+                                className="hover:text-white transition-colors"
+                                onClick={() => setMobileOpen(false)}
+                            >
                                 Sobre
                             </Link>
 
@@ -136,7 +149,7 @@ function Navbar() {
                                     </button>
                                 </Link>
 
-                                <Link to="/signup">
+                                <Link to="/sign-up">
                                     <button className="w-full h-11 rounded-md bg-white text-black font-medium cursor-pointer">
                                         Criar conta
                                     </button>

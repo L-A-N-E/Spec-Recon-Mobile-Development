@@ -56,7 +56,7 @@ function Home() {
 
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.25),transparent_40%)]" />
 
-                <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:80px_80px]" />
+                <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-size-[80px_80px]" />
 
                 <div className="relative max-w-7xl mx-auto px-6 lg:px-10 pt-36 pb-28 lg:pt-44 lg:pb-36">
 
@@ -71,7 +71,7 @@ function Home() {
                             Inteligência
                             <br />
 
-                            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                            <span className="bg-linear-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
                                 Competitiva
                             </span>
 

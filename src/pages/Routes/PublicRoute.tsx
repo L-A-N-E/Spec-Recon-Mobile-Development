@@ -4,7 +4,13 @@ interface PublicRouteProps {
     children: React.ReactNode
 }
 
-function PublicRoute({ children }: PublicRouteProps) {
+function PublicRoute({
+    children,
+}: PublicRouteProps) {
+
+    // futuramente:
+    // const { user } = useAuth()
+
     const isAuthenticated = false
 
     if (isAuthenticated) {

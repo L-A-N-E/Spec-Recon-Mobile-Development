@@ -4,12 +4,17 @@ interface ProtectedRouteProps {
     children: React.ReactNode
 }
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
+function ProtectedRoute({
+    children,
+}: ProtectedRouteProps) {
+
+    // futuramente:
+    // const { user } = useAuth()
+
     const isAuthenticated = false
 
-
     if (!isAuthenticated) {
-        return <Navigate to="/" replace />
+        return <Navigate to="/login" replace />
     }
 
     return children

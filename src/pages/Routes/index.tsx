@@ -3,8 +3,9 @@ import { createBrowserRouter } from "react-router-dom"
 import ProtectedRoute from './ProtectedRoute.tsx'
 import PublicRoute from './PublicRoute.tsx'
 // Layouts
-import PrivateLayout from "../../layout/PrivateLayout.tsx"
-import PublicLayout from "../../layout/PublicLayout.tsx"
+import RootLayout from "../../layout/RootLayout/index.tsx"
+import PrivateLayout from "../../layout/PrivateLayout/index.tsx"
+import PublicLayout from "../../layout/PublicLayout/index.tsx"
 // Páginas
 import Home from '../Home/index.tsx'
 import Error from '../Error/index.tsx'
@@ -21,93 +22,101 @@ import ForgotPassword from "../Auth/ForgotPassword/index.tsx"
 
 export const router = createBrowserRouter([
     {
-        element: <PublicLayout />,
+        element: <RootLayout />,
         errorElement: <Error />,
-        children: [
-            {
-                path: "/",
-                element: <Home />
-            },
-
-            {
-                path: "/login",
-                element: (
-                    <PublicRoute>
-                        <Login />
-                    </PublicRoute>
-                )
-            },
-
-            {
-                path: "/sign-up",
-                element: (
-                    <PublicRoute>
-                        <Signup />
-                    </PublicRoute>
-                )
-            },
-
-            {
-                path: "/forgot-password",
-                element: (
-                    <PublicRoute>
-                        <ForgotPassword />
-                    </PublicRoute>
-                )
-            },
-
-            {
-                path: "/privacy-policy",
-                element: (
-                    <PublicRoute>
-                        <PrivacyPolicy />
-                    </PublicRoute>
-                )
-            },
-
-            {
-                path: "/terms-of-use",
-                element: (
-                    <PublicRoute>
-                        <Terms_Of_Use />
-                    </PublicRoute>
-                )
-            }
-        ]
-    },
-
-    {
-        errorElement: <Error />,
-        element: (
-            <ProtectedRoute>
-                <PrivateLayout />
-            </ProtectedRoute>
-        ),
 
         children: [
+
+            // =========================
+            // PUBLIC LAYOUT
+            // =========================
             {
-                path: "/dashboard",
-                element: <Dashboard />
+                element: <PublicLayout />,
+
+                children: [
+
+                    // =========================
+                    // FREE ROUTES
+                    // =========================
+                    {
+                        path: "/",
+                        element: <Home />
+                    },
+
+                    {
+                        path: "/privacy-policy",
+                        element: <PrivacyPolicy />
+                    },
+
+                    {
+                        path: "/terms-of-use",
+                        element: <Terms_Of_Use />
+                    },
+
+                    // =========================
+                    // ONLY NON AUTHENTICATED
+                    // =========================
+                    {
+                        element: <PublicRoute />,
+
+                        children: [
+                            {
+                                path: "/login",
+                                element: <Login />
+                            },
+
+                            {
+                                path: "/sign-up",
+                                element: <Signup />
+                            },
+
+                            {
+                                path: "/forgot-password",
+                                element: <ForgotPassword />
+                            }
+                        ]
+                    }
+                ]
             },
 
+            // =========================
+            // PRIVATE ROUTES
+            // =========================
             {
-                path: "/radar",
-                element: <Radar />
-            },
+                element: <ProtectedRoute />,
 
-            {
-                path: "/grid",
-                element: <Grid />
-            },
+                children: [
+                    {
+                        element: <PrivateLayout />,
 
-            {
-                path: "/assistant",
-                element: <Assistant />
-            },
-            
-            {
-                path: "/profile",
-                element: <Profile />
+                        children: [
+                            {
+                                path: "/dashboard",
+                                element: <Dashboard />
+                            },
+
+                            {
+                                path: "/radar",
+                                element: <Radar />
+                            },
+
+                            {
+                                path: "/grid",
+                                element: <Grid />
+                            },
+
+                            {
+                                path: "/assistant",
+                                element: <Assistant />
+                            },
+
+                            {
+                                path: "/profile",
+                                element: <Profile />
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     }

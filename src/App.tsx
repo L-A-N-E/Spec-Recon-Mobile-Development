@@ -1,7 +1,11 @@
-import { Outlet } from "react-router-dom"
+import { RouterProvider } from "react-router-dom"
+import { router } from "./pages/Routes"
 
 function App() {
-  return null
+
+    return (
+        <RouterProvider router={router} />
+    )
 }
 
 export default App

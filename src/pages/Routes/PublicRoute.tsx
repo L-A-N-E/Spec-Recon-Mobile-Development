@@ -1,23 +1,12 @@
-import { Navigate } from "react-router-dom"
+import { Navigate, Outlet } from "react-router-dom"
 
-interface PublicRouteProps {
-    children: React.ReactNode
-}
-
-function PublicRoute({
-    children,
-}: PublicRouteProps) {
-
-    // futuramente:
-    // const { user } = useAuth()
+function PublicRoute() {
 
     const isAuthenticated = false
 
-    if (isAuthenticated) {
-        return <Navigate to="/dashboard" replace />
-    }
-
-    return children
+    return isAuthenticated
+        ? <Navigate to="/dashboard" replace />
+        : <Outlet />
 }
 
 export default PublicRoute

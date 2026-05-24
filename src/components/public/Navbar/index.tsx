@@ -40,27 +40,28 @@ function Navbar() {
                 {/* Desktop Navigation */}
                 <nav className="hidden lg:flex items-center gap-8 text-sm text-white/70">
                     <Link
-                        to="/"
+                        to="/#home"
                         className="hover:text-white transition-colors cursor-pointer"
                     >
                         Home
                     </Link>
+
                     <Link
-                        to="/"
+                        to="/#sobre"
                         className="hover:text-white transition-colors cursor-pointer"
                     >
                         Sobre
                     </Link>
 
                     <Link
-                        to="/"
+                        to="/#modulos"
                         className="hover:text-white transition-colors cursor-pointer"
                     >
                         Módulos
                     </Link>
 
                     <Link
-                        to="/"
+                        to="/#tecnologia"
                         className="hover:text-white transition-colors cursor-pointer"
                     >
                         Tecnologia
@@ -108,14 +109,14 @@ function Navbar() {
 
                         <nav className="flex flex-col gap-5 text-white/70 text-sm">
                             <Link
-                                to="/"
+                                to="/#home"
                                 className="hover:text-white transition-colors"
                                 onClick={() => setMobileOpen(false)}
                             >
                                 Home
                             </Link>
                             <Link
-                                to="/"
+                                to="/#sobre"
                                 className="hover:text-white transition-colors"
                                 onClick={() => setMobileOpen(false)}
                             >
@@ -123,7 +124,7 @@ function Navbar() {
                             </Link>
 
                             <Link
-                                to="/"
+                                to="/#modulos"
                                 className="hover:text-white transition-colors"
                                 onClick={() => setMobileOpen(false)}
                             >
@@ -131,7 +132,7 @@ function Navbar() {
                             </Link>
 
                             <Link
-                                to="/"
+                                to="/#tecnologia"
                                 className="hover:text-white transition-colors"
                                 onClick={() => setMobileOpen(false)}
                             >

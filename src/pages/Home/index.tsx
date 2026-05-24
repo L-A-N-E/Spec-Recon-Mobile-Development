@@ -12,7 +12,8 @@ import {
 import { Link } from "react-router-dom"
 
 import Button from "../../components/public/Button"
-
+import { useEffect } from "react"
+import { useLocation } from "react-router-dom"
 
 const modules = [
     {
@@ -49,6 +50,20 @@ const modules = [
 ]
 
 function Home() {
+
+    const location = useLocation()
+
+    useEffect(() => {
+        if (location.hash) {
+            const element = document.querySelector(location.hash)
+
+            if (element) {
+                element.scrollIntoView({
+                    behavior: "smooth",
+                })
+            }
+        }
+    }, [location])
     return (
         <div className="min-h-screen bg-black text-white overflow-hidden">
 

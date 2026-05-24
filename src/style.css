@@ -26,3 +26,7 @@
         rgba(59,130,246,0.4)
         rgba(255,255,255,0.03);
 }
+
+html {
+    scroll-behavior: smooth;
+}

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import Logo_Lane from "../../../assets/logo-branca.png"
 
 function Footer() {
     return (
@@ -116,13 +117,15 @@ function Footer() {
                                     Desenvolvido por
                                 </div>
 
-                                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/3">
+                                <div className="inline-flex items-center">
 
-                                    <div className="w-3 h-3 rounded-full bg-linear-to-br from-blue-500 to-cyan-400" />
+                                    {/* <div className="w-3 h-3 rounded-full bg-linear-to-br from-blue-500 to-cyan-400" /> */}
 
-                                    <div className="font-semibold tracking-wide text-white/80">
+                                    <img src={Logo_Lane} alt="Logo Lane" className="w-20 h-20 object-contain" />
+
+                                    {/* <div className="font-semibold tracking-wide text-white/80">
                                         LANE
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>

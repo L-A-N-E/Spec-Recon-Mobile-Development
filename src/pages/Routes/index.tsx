@@ -15,10 +15,10 @@ import Radar from '../Radar/index.tsx'
 import Dashboard from '../Dashboard/index.tsx'
 import Grid from '../Grid/index.tsx'
 import Assistant from '../Assistant/index.tsx'
-import Profile from '../Profile/index.tsx'
 import Terms_Of_Use from "../TermsOfUse/index.tsx"
 import PrivacyPolicy from "../PrivacyPolicy/index.tsx"
 import ForgotPassword from "../Auth/ForgotPassword/index.tsx"
+import ProfileSettings from "../Auth/ProfileSettings/index.tsx"
 
 export const router = createBrowserRouter([
     {
@@ -111,8 +111,8 @@ export const router = createBrowserRouter([
                             },
 
                             {
-                                path: "/profile",
-                                element: <Profile />
+                                path: "/profile-settings",
+                                element: <ProfileSettings />
                             }
                         ]
                     }

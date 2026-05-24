@@ -13,6 +13,7 @@ import { Link } from "react-router-dom"
 
 import Button from "../../components/public/Button"
 
+
 const modules = [
     {
         icon: Radar,
@@ -51,7 +52,7 @@ function Home() {
     return (
         <div className="min-h-screen bg-black text-white overflow-hidden">
 
-            {/* HERO */}
+            {/* Home */}
             <section className="relative overflow-hidden border-b border-white/10" id="home">
 
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.25),transparent_40%)]" />
@@ -125,7 +126,7 @@ function Home() {
                 </div>
             </section>
 
-            {/* SOBRE */}
+            {/* Sobre */}
             <section
                 id="sobre"
                 className="border-t border-white/10 border-b bg-white/2"
@@ -154,7 +155,7 @@ function Home() {
                 </div>
             </section>
 
-            {/* MODULES */}
+            {/* Modulos */}
             <section
                 id="modulos"
                 className="max-w-7xl mx-auto px-6 lg:px-10 py-24"
@@ -179,34 +180,124 @@ function Home() {
                             <Link
                                 key={module.code}
                                 to={module.to}
-                                className="group p-8 rounded-2xl border border-white/10 bg-white/3 hover:bg-white/5 hover:border-blue-500/30 transition-all"
+                                className="
+        group
+        relative
+        overflow-hidden
+        p-8
+        rounded-2xl
+        border
+        border-white/10
+        bg-white/[0.03]
+
+        transition-all
+        duration-500
+        ease-out
+
+        hover:-translate-y-1
+        hover:border-blue-500/30
+        hover:bg-white/[0.05]
+        hover:shadow-[0_0_40px_rgba(59,130,246,0.12)]
+    "
                             >
 
-                                <div className="flex items-start justify-between mb-8">
+                                {/* Glow background */}
+                                <div
+                                    className="
+            absolute
+            inset-0
+            opacity-0
+            group-hover:opacity-100
+            transition-opacity
+            duration-500
+            bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_45%)]
+        "
+                                />
 
-                                    <div className="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                <div className="relative flex items-start justify-between mb-8">
+
+                                    <div
+                                        className="
+                w-14
+                h-14
+                rounded-xl
+                bg-blue-500/10
+                border
+                border-blue-500/10
+                flex
+                items-center
+                justify-center
+                text-blue-400
+
+                transition-all
+                duration-500
+                ease-out
+
+                group-hover:bg-blue-500
+                group-hover:text-white
+                group-hover:scale-110
+                group-hover:rotate-3
+            "
+                                    >
                                         <Icon className="w-6 h-6" />
                                     </div>
 
-                                    <span className="text-xs font-mono text-white/30">
+                                    <span
+                                        className="
+                text-xs
+                font-mono
+                text-white/30
+
+                transition-colors
+                duration-300
+
+                group-hover:text-blue-300
+            "
+                                    >
                                         {module.code}
                                     </span>
                                 </div>
 
-                                <h3 className="text-2xl font-semibold tracking-tight mb-3">
-                                    {module.title}
-                                </h3>
+                                <div className="relative">
 
-                                <p className="text-white/50 leading-relaxed text-sm">
-                                    {module.desc}
-                                </p>
+                                    <h3
+                                        className="
+                text-2xl
+                font-semibold
+                tracking-tight
+                mb-3
+
+                transition-colors
+                duration-300
+
+                group-hover:text-blue-100
+            "
+                                    >
+                                        {module.title}
+                                    </h3>
+
+                                    <p
+                                        className="
+                text-white/50
+                leading-relaxed
+                text-sm
+
+                transition-colors
+                duration-300
+
+                group-hover:text-white/70
+            "
+                                    >
+                                        {module.desc}
+                                    </p>
+                                </div>
                             </Link>
                         )
                     })}
                 </div>
             </section>
 
-            {/* TECNOLOGIA */}
+            {/* Tecnologia */}
             <section
                 id="tecnologia"
                 className="border-y border-white/10 bg-white/2"

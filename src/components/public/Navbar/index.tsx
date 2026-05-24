@@ -9,7 +9,7 @@ import PictureProfile from "../../private/PictureProfile/index"
 
 function Navbar() {
     // futuramente vem do auth context/supabase
-    const isAuthenticated = false
+    const isAuthenticated = true
 
     const [mobileOpen, setMobileOpen] = useState(false)
 

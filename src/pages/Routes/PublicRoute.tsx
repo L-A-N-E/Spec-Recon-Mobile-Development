@@ -2,7 +2,7 @@ import { Navigate, Outlet } from "react-router-dom"
 
 function PublicRoute() {
 
-    const isAuthenticated = false
+    const isAuthenticated = true
 
     return isAuthenticated
         ? <Navigate to="/dashboard" replace />

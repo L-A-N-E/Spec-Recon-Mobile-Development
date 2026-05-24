@@ -2,15 +2,15 @@ import { useMemo, useState } from "react"
 
 import {
     GitCompare,
-    Zap,
     TrendingUp,
     TrendingDown,
     Minus,
     Gauge,
     BatteryCharging,
-    TimerReset,
     Cpu,
     ArrowRightLeft,
+    Fuel,
+    Weight,
 } from "lucide-react"
 
 type VehicleSpec = {
@@ -19,96 +19,120 @@ type VehicleSpec = {
     name: string
     segment: string
     powertrain: string
-    power_hp: number
-    torque_nm: number
-    range_km: number
-    battery_kwh: number
-    voltage: number
+    power_cv: number
+    torque_kgfm: number
+    autonomy_km: number
+    tank_l: number
     acceleration_0_100: number
     top_speed_kmh: number
-    drag_coefficient: number
     weight_kg: number
-    charging_kw: number
-    price_usd: number
+    towing_kg: number
+    price_brl: number
 }
 
 const fordVehicles: VehicleSpec[] = [
+    {
+        id: "ranger-raptor",
+        brand: "Ford",
+        name: "Ranger Raptor",
+        segment: "Pickup",
+        powertrain: "3.0 V6 Biturbo Gasolina",
+        power_cv: 397,
+        torque_kgfm: 59.5,
+        autonomy_km: 650,
+        tank_l: 80,
+        acceleration_0_100: 5.8,
+        top_speed_kmh: 180,
+        weight_kg: 2454,
+        towing_kg: 2500,
+        price_brl: 490000,
+    },
+
+    {
+        id: "f150-raptor",
+        brand: "Ford",
+        name: "F-150 Raptor",
+        segment: "Pickup",
+        powertrain: "3.5 V6 EcoBoost",
+        power_cv: 456,
+        torque_kgfm: 70,
+        autonomy_km: 700,
+        tank_l: 136,
+        acceleration_0_100: 5.3,
+        top_speed_kmh: 180,
+        weight_kg: 2670,
+        towing_kg: 3700,
+        price_brl: 750000,
+    },
+
     {
         id: "mustang-mach-e",
         brand: "Ford",
         name: "Mustang Mach-E GT",
         segment: "SUV",
         powertrain: "Elétrico",
-        power_hp: 480,
-        torque_nm: 860,
-        range_km: 500,
-        battery_kwh: 91,
-        voltage: 400,
+        power_cv: 487,
+        torque_kgfm: 87.7,
+        autonomy_km: 500,
+        tank_l: 0,
         acceleration_0_100: 3.8,
         top_speed_kmh: 200,
-        drag_coefficient: 0.29,
         weight_kg: 2250,
-        charging_kw: 150,
-        price_usd: 69000,
-    },
-
-    {
-        id: "f150-lightning",
-        brand: "Ford",
-        name: "F-150 Lightning",
-        segment: "Pickup",
-        powertrain: "Elétrico",
-        power_hp: 580,
-        torque_nm: 1050,
-        range_km: 515,
-        battery_kwh: 131,
-        voltage: 400,
-        acceleration_0_100: 4.4,
-        top_speed_kmh: 180,
-        drag_coefficient: 0.36,
-        weight_kg: 2900,
-        charging_kw: 155,
-        price_usd: 72000,
+        towing_kg: 750,
+        price_brl: 650000,
     },
 ]
 
 const competitorVehicles: VehicleSpec[] = [
     {
-        id: "tesla-model-y",
-        brand: "Tesla",
-        name: "Model Y Performance",
-        segment: "SUV",
-        powertrain: "Elétrico",
-        power_hp: 534,
-        torque_nm: 660,
-        range_km: 533,
-        battery_kwh: 82,
-        voltage: 400,
-        acceleration_0_100: 3.7,
-        top_speed_kmh: 250,
-        drag_coefficient: 0.23,
-        weight_kg: 1995,
-        charging_kw: 250,
-        price_usd: 58000,
+        id: "hilux-grs",
+        brand: "Toyota",
+        name: "Hilux GR-Sport",
+        segment: "Pickup",
+        powertrain: "2.8 Turbo Diesel",
+        power_cv: 224,
+        torque_kgfm: 55,
+        autonomy_km: 1000,
+        tank_l: 80,
+        acceleration_0_100: 9.8,
+        top_speed_kmh: 180,
+        weight_kg: 2240,
+        towing_kg: 3500,
+        price_brl: 390000,
     },
 
     {
-        id: "byd-seal",
-        brand: "BYD",
-        name: "Seal Performance",
-        segment: "Sedan",
-        powertrain: "Elétrico",
-        power_hp: 530,
-        torque_nm: 670,
-        range_km: 570,
-        battery_kwh: 82,
-        voltage: 800,
-        acceleration_0_100: 3.8,
-        top_speed_kmh: 240,
-        drag_coefficient: 0.22,
-        weight_kg: 2185,
-        charging_kw: 230,
-        price_usd: 52000,
+        id: "ram-rampage",
+        brand: "RAM",
+        name: "Rampage R/T",
+        segment: "Pickup",
+        powertrain: "2.0 Hurricane Turbo",
+        power_cv: 272,
+        torque_kgfm: 40.8,
+        autonomy_km: 700,
+        tank_l: 60,
+        acceleration_0_100: 6.9,
+        top_speed_kmh: 220,
+        weight_kg: 1940,
+        towing_kg: 750,
+        price_brl: 300000,
+    },
+
+    {
+        id: "silverado",
+        brand: "Chevrolet",
+        name: "Silverado High Country",
+        segment: "Pickup",
+        powertrain: "5.3 V8",
+        power_cv: 360,
+        torque_kgfm: 53,
+        autonomy_km: 650,
+        tank_l: 91,
+        acceleration_0_100: 6.5,
+        top_speed_kmh: 190,
+        weight_kg: 2530,
+        towing_kg: 4100,
+        price_brl: 540000,
     },
 ]
 
@@ -119,37 +143,30 @@ const specs: {
     higherBetter: boolean
 }[] = [
         {
-            key: "power_hp",
+            key: "power_cv",
             label: "Potência",
-            unit: "hp",
+            unit: "cv",
             higherBetter: true,
         },
 
         {
-            key: "torque_nm",
+            key: "torque_kgfm",
             label: "Torque",
-            unit: "Nm",
+            unit: "kgfm",
             higherBetter: true,
         },
 
         {
-            key: "range_km",
+            key: "autonomy_km",
             label: "Autonomia",
             unit: "km",
             higherBetter: true,
         },
 
         {
-            key: "battery_kwh",
-            label: "Bateria",
-            unit: "kWh",
-            higherBetter: true,
-        },
-
-        {
-            key: "voltage",
-            label: "Arquitetura",
-            unit: "V",
+            key: "tank_l",
+            label: "Tanque",
+            unit: "L",
             higherBetter: true,
         },
 
@@ -162,37 +179,38 @@ const specs: {
 
         {
             key: "top_speed_kmh",
-            label: "Velocidade máx.",
+            label: "Velocidade Máx.",
             unit: "km/h",
             higherBetter: true,
         },
 
         {
-            key: "drag_coefficient",
-            label: "Arrasto",
-            unit: "Cd",
+            key: "weight_kg",
+            label: "Peso",
+            unit: "kg",
             higherBetter: false,
         },
 
         {
-            key: "charging_kw",
-            label: "Carga rápida",
-            unit: "kW",
+            key: "towing_kg",
+            label: "Capacidade Reboque",
+            unit: "kg",
             higherBetter: true,
         },
 
         {
-            key: "price_usd",
+            key: "price_brl",
             label: "Preço",
-            unit: "USD",
+            unit: "R$",
             higherBetter: false,
         },
     ]
 
 function Grid() {
 
-    const [fordId, setFordId] = useState(fordVehicles[0].id)
-    const [competitorId, setCompetitorId] = useState(competitorVehicles[0].id)
+    // DEFAULT = Ranger Raptor x Hilux
+    const [fordId, setFordId] = useState("ranger-raptor")
+    const [competitorId, setCompetitorId] = useState("hilux-grs")
 
     const ford = useMemo(
         () => fordVehicles.find((v) => v.id === fordId)!,
@@ -231,8 +249,8 @@ function Grid() {
                     </h1>
 
                     <p className="mt-4 text-white/50 max-w-2xl leading-relaxed">
-                        Compare plataformas Ford com concorrentes globais e
-                        identifique gaps estratégicos automaticamente.
+                        Compare veículos Ford com concorrentes globais
+                        utilizando benchmark estratégico automatizado.
                     </p>
                 </div>
 
@@ -283,7 +301,7 @@ function Grid() {
                         </div>
 
                         <div className="text-sm text-white/40 mt-1">
-                            Benchmark estratégico automatizado
+                            Benchmark competitivo automatizado
                         </div>
                     </div>
                 </div>
@@ -317,7 +335,7 @@ function Grid() {
                 />
             </div>
 
-            {/* Comparison Table */}
+            {/* Comparison */}
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] overflow-hidden">
 
                 <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
@@ -359,48 +377,111 @@ function Grid() {
 
                         const delta =
                             ((fordValue - competitorValue) /
-                                competitorValue) *
-                            100
+                                competitorValue) * 100
 
                         return (
                             <div
                                 key={spec.key}
-                                className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center px-6 py-5 hover:bg-white/[0.02] transition-colors"
+                                className="
+                    px-4
+                    lg:px-6
+                    py-5
+
+                    hover:bg-white/[0.02]
+                    transition-colors
+                "
                             >
 
-                                <SpecValue
-                                    value={fordValue}
-                                    unit={spec.unit}
-                                    winner={fordWin}
-                                    align="right"
-                                />
+                                {/* MOBILE */}
+                                <div className="lg:hidden space-y-4">
 
-                                <div className="min-w-[130px] text-center">
+                                    <div className="flex items-center justify-between">
 
-                                    <div className="text-sm font-medium">
-                                        {spec.label}
+                                        <div className="text-sm font-medium">
+                                            {spec.label}
+                                        </div>
+
+                                        <div className="flex items-center gap-1 text-xs text-white/40">
+
+                                            {delta > 0 ? (
+                                                <TrendingUp className="w-3 h-3 text-green-400" />
+                                            ) : delta < 0 ? (
+                                                <TrendingDown className="w-3 h-3 text-red-400" />
+                                            ) : (
+                                                <Minus className="w-3 h-3" />
+                                            )}
+
+                                            {Math.abs(delta).toFixed(1)}%
+                                        </div>
                                     </div>
 
-                                    <div className="mt-1 flex items-center justify-center gap-1 text-xs text-white/40">
+                                    <div className="grid grid-cols-2 gap-3">
 
-                                        {delta > 0 ? (
-                                            <TrendingUp className="w-3 h-3 text-green-400" />
-                                        ) : delta < 0 ? (
-                                            <TrendingDown className="w-3 h-3 text-red-400" />
-                                        ) : (
-                                            <Minus className="w-3 h-3" />
-                                        )}
+                                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                                            <div className="text-xs text-white/30 mb-2">
+                                                {ford.brand}
+                                            </div>
 
-                                        {Math.abs(delta).toFixed(1)}%
+                                            <SpecValue
+                                                value={fordValue}
+                                                unit={spec.unit}
+                                                winner={fordWin}
+                                                align="left"
+                                            />
+                                        </div>
+
+                                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                                            <div className="text-xs text-white/30 mb-2">
+                                                {competitor.brand}
+                                            </div>
+
+                                            <SpecValue
+                                                value={competitorValue}
+                                                unit={spec.unit}
+                                                winner={competitorWin}
+                                                align="left"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <SpecValue
-                                    value={competitorValue}
-                                    unit={spec.unit}
-                                    winner={competitorWin}
-                                    align="left"
-                                />
+                                {/* DESKTOP */}
+                                <div className="hidden lg:grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+
+                                    <SpecValue
+                                        value={fordValue}
+                                        unit={spec.unit}
+                                        winner={fordWin}
+                                        align="right"
+                                    />
+
+                                    <div className="min-w-[150px] text-center">
+
+                                        <div className="text-sm font-medium">
+                                            {spec.label}
+                                        </div>
+
+                                        <div className="mt-1 flex items-center justify-center gap-1 text-xs text-white/40">
+
+                                            {delta > 0 ? (
+                                                <TrendingUp className="w-3 h-3 text-green-400" />
+                                            ) : delta < 0 ? (
+                                                <TrendingDown className="w-3 h-3 text-red-400" />
+                                            ) : (
+                                                <Minus className="w-3 h-3" />
+                                            )}
+
+                                            {Math.abs(delta).toFixed(1)}%
+                                        </div>
+                                    </div>
+
+                                    <SpecValue
+                                        value={competitorValue}
+                                        unit={spec.unit}
+                                        winner={competitorWin}
+                                        align="left"
+                                    />
+                                </div>
                             </div>
                         )
                     })}
@@ -413,23 +494,23 @@ function Grid() {
                 <InsightCard
                     icon={Gauge}
                     title="Performance"
-                    text={`Ford entrega ${ford.power_hp}hp e supera parte dos concorrentes em torque bruto.`}
+                    text={`${ford.name} entrega ${ford.power_cv}cv e ${ford.torque_kgfm}kgfm de torque.`}
                 />
 
                 <InsightCard
-                    icon={BatteryCharging}
-                    title="Charging Gap"
-                    text={`Concorrentes já operam acima de ${competitor.charging_kw}kW em carregamento rápido.`}
+                    icon={Fuel}
+                    title="Autonomia"
+                    text={`${competitor.name} possui autonomia estimada de ${competitor.autonomy_km}km.`}
                 />
 
                 <InsightCard
-                    icon={Cpu}
-                    title="Arquitetura"
-                    text={`Arquitetura ${competitor.voltage}V indica avanço em eficiência térmica e recarga.`}
+                    icon={Weight}
+                    title="Capacidade"
+                    text={`${competitor.name} suporta até ${competitor.towing_kg}kg de reboque.`}
                 />
             </div>
 
-            {/* Bottom */}
+            {/* Footer */}
             <div className="mt-10 text-center text-xs uppercase tracking-[0.25em] text-white/20">
                 Ford Motor Company · Spec Recon Grid Engine
             </div>
@@ -526,12 +607,12 @@ function VehicleCard({
 
                 <MiniInfo
                     label="Potência"
-                    value={`${vehicle.power_hp}hp`}
+                    value={`${vehicle.power_cv}cv`}
                 />
 
                 <MiniInfo
                     label="Torque"
-                    value={`${vehicle.torque_nm}Nm`}
+                    value={`${vehicle.torque_kgfm}kgfm`}
                 />
             </div>
         </div>
@@ -572,10 +653,14 @@ function SpecValue({
 }) {
 
     const formatted =
-        unit === "USD"
-            ? `$${value.toLocaleString("en-US")}`
+        unit === "R$"
+            ? value.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+                maximumFractionDigits: 0,
+            })
             : value.toLocaleString("pt-BR", {
-                maximumFractionDigits: 2,
+                maximumFractionDigits: 1,
             })
 
     return (
@@ -607,9 +692,11 @@ function SpecValue({
                 {formatted}
             </span>
 
-            <span className="text-sm text-white/35">
-                {unit}
-            </span>
+            {unit !== "R$" && (
+                <span className="text-sm text-white/35">
+                    {unit}
+                </span>
+            )}
 
             {winner && (
                 <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.8)]" />

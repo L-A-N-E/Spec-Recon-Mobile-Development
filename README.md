@@ -235,6 +235,92 @@ npm run preview
 
 ---
 
+# 📸 Preview do Projeto
+
+## 
+<img width="100%" alt="mockup" src="https://github.com/user-attachments/assets/3f8e3ed3-1b5f-4c34-9a28-4e1e7e546865" />
+
+
+## 📱 Mobile
+
+<p align="center">
+	<img width="230" alt="img" src="https://github.com/user-attachments/assets/0c43ec24-fe5e-4d35-807b-8c62605d4a3a" />
+	<img width="230" alt="img" src="https://github.com/user-attachments/assets/4b5c1d07-df38-44de-b674-66b235e7e09f" />
+</p>
+
+---
+
+## 🖥️ Desktop
+
+<p align="center">
+	<img width="850" alt="img" src="https://github.com/user-attachments/assets/8c6de681-937c-4ca0-bc2e-44e587eebeac" />
+</p>
+
+---
+
+## 🛜 Radar
+
+<p align="center">
+	<img width="230" alt="img" src="https://github.com/user-attachments/assets/8e8192bc-92cd-4f5d-8d4c-d358e0196b75" />
+	<img width="230" alt="img" src="https://github.com/user-attachments/assets/660d8926-c393-4bc7-a9f2-00080198f593" />
+</p>
+
+<p align="center">
+	<img width="850" alt="img" src="https://github.com/user-attachments/assets/8c312ba7-4073-4c4d-8601-df86b5d72179" />
+</p>
+
+---
+
+## 📱 Dashboard
+
+<p align="center">
+	<img width="230" alt="img" src="https://github.com/user-attachments/assets/02cf7e3b-a6d7-4db7-bc81-5e8eacb37d58" />
+	<img width="230" alt="img" src="https://github.com/user-attachments/assets/59ec27e5-c2bd-488a-9763-78762dc19efe" />
+</p>
+
+<p align="center">
+	<img width="850" alt="img" src="https://github.com/user-attachments/assets/ce26aa1c-92ad-450e-8d8b-e385221fdffc" />
+</p>
+
+---
+
+## 🖥️ Grid
+
+<p align="center">
+	<img width="230" alt="image" src="https://github.com/user-attachments/assets/ec0332dd-8a24-40d0-a3b3-d09de0f5c7b4" />
+	<img width="230" alt="image" src="https://github.com/user-attachments/assets/e5ddafd5-dd99-4f7c-af00-857dd00aae16" />
+</p>
+
+<p align="center">
+    <img width="850" alt="image" src="https://github.com/user-attachments/assets/81d15508-4b1d-445e-a0bb-f657cfb83d97" />
+</p>
+
+---
+
+## 💁 Assistente Virtual
+
+<p align="center">
+	<img width="230" alt="image" src="https://github.com/user-attachments/assets/2a1be50e-0203-4791-a840-df2de8a37aeb" />
+	<img width="230" alt="image" src="https://github.com/user-attachments/assets/0e360133-7763-4534-93b5-6599fc221874" />
+
+</p>
+
+<p align="center">
+	<img width="850" alt="image" src="https://github.com/user-attachments/assets/9cec1ab0-4cc7-448d-8727-2f87eff865c8" />
+
+</p>
+
+---
+
+## 🎥 Demonstração em Video
+<p align="center">
+    <a href="https://youtu.be/sQx0dSIoJ6o" target="_blank">
+		<img width="580" alt="tumb" src="https://github.com/user-attachments/assets/1d1ca7cd-f580-4de5-9be9-10379905d0dd" />
+    </a>
+</p>
+
+---
+
 # 🧪 Futuras Implementações
 
 * [ ] Integração com banco de dados;

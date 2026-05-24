@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" align="center" width="30%">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Ford_Motor_Company_Logo.svg" align="center" width="30%">
 </p>
 
 <h1 align="center">Spec Recon - Mobile Development</h1>
@@ -33,30 +33,57 @@
 - [⚙️ Instalação](#️-instalação)
 - [▶️ Execução](#️-execução)
 - [🧪 Futuras Implementações](#-futuras-implementações)
-- [🤝 Contribuição](#-contribuição)
 - [📄 Licença](#-licença)
 
 ---
 
 # 📖 Sobre o Projeto
 
-O **Spec Recon** é uma plataforma de inteligência competitiva automotiva desenvolvida com foco em Estratégia, Marketing e Análise de Dados.
+O **Spec Recon** é uma plataforma de inteligência competitiva automotiva desenvolvida para atender uma necessidade estratégica da Ford nas áreas de Estratégia, Marketing e Análise de Dados.
 
-A solução foi criada para centralizar a busca e análise de informações do setor automotivo em uma única plataforma, permitindo:
+Com o avanço do mercado automotivo e o crescimento acelerado da concorrência global, muitas análises passaram a depender de pesquisas manuais, ferramentas genéricas de Business Intelligence e múltiplas fontes dispersas de informação. Esse cenário gera alto custo operacional, baixa eficiência analítica e dificuldade na tomada de decisões rápidas.
 
-- Monitoramento contínuo do mercado automotivo;
-- Comparações técnicas automatizadas;
-- Centralização de dados estratégicos;
-- Interface moderna e intuitiva;
-- Assistente virtual com inteligência artificial integrada.
+O Spec Recon foi criado justamente para solucionar essa dor, centralizando a coleta, organização e análise de informações automotivas em uma única plataforma inteligente.
 
-O projeto utiliza conceitos de:
+A solução permite que equipes estratégicas tenham acesso rápido e estruturado a dados relevantes do mercado, reduzindo o tempo gasto em pesquisas e aumentando a capacidade de identificar tendências, tecnologias emergentes e movimentos da concorrência.
+
+## 🚀 Principais Objetivos
+
+- Centralizar informações estratégicas do setor automotivo;
+- Automatizar comparações técnicas entre veículos e plataformas;
+- Monitorar continuamente concorrentes e tendências de mercado;
+- Facilitar tomadas de decisão baseadas em dados;
+- Reduzir o esforço operacional em pesquisas e análises;
+- Oferecer uma experiência moderna, acessível e intuitiva.
+
+## ⚡ Principais Funcionalidades
+
+- Radar de Inteligência com monitoramento contínuo;
+- Dashboard estratégico com métricas e insights;
+- Grid competitivo com comparação técnica automatizada;
+- Assistente virtual com Inteligência Artificial;
+- Organização estruturada de dados automotivos;
+- Interface responsiva e moderna.
+
+## 🧠 Tecnologias e Conceitos Aplicados
+
+O projeto utiliza conceitos e tecnologias modernas como:
 
 - OSINT (Open Source Intelligence)
 - Inteligência Artificial
 - Automação de Coleta de Dados
 - Business Intelligence
 - UX/UI Moderna
+- React
+- TypeScript
+- TailwindCSS
+- React Router DOM
+- Lucide React
+- Vite
+
+## 🎯 Proposta do Projeto
+
+Mais do que uma plataforma visual, o Spec Recon busca transformar grandes volumes de dados públicos em inteligência estratégica acionável, permitindo que a Ford tenha mais autonomia, velocidade e precisão na análise competitiva automotiva.
 
 ---
 
@@ -217,38 +244,8 @@ npm run preview
 * [ ] Integração com IA generativa;
 * [ ] Sistema de notificações;
 * [ ] Web scraping automatizado;
-* [ ] Integração com Supabase;
 * [ ] Sistema de permissões;
 * [ ] Exportação de relatórios.
-
----
-
-# 🤝 Contribuição
-
-Contribuições são sempre bem-vindas.
-
-## Como contribuir
-
-1. Faça um fork do projeto;
-2. Crie uma branch:
-
-```bash
-git checkout -b minha-feature
-```
-
-3. Commit suas alterações:
-
-```bash
-git commit -m "feat: minha nova feature"
-```
-
-4. Faça push da branch:
-
-```bash
-git push origin minha-feature
-```
-
-5. Abra um Pull Request.
 
 ---
 
@@ -265,6 +262,11 @@ Desenvolvido para estudos de Engenharia de Software e aplicações de Inteligên
 ### L.A.N.E — FIAP | Engenharia de Software
 
 Projeto acadêmico desenvolvido para o Challenge Ford 2026.
+
+| [<img src="https://avatars.githubusercontent.com/u/101829188?v=4" width=115><br><sub>Alice Santos Bulhões</sub>](https://github.com/AliceSBulhoes) |  [<img src="https://avatars.githubusercontent.com/u/163866552?v=4" width=115><br><sub>Eduardo Oliveira Cardoso Madid</sub>](https://github.com/EduardoMadid) |  [<img src="https://avatars.githubusercontent.com/u/148162404?v=4" width=115><br><sub>Lucas Henzo Ide Yuki</sub>](https://github.com/LucasYuki1) | [<img src="https://avatars.githubusercontent.com/u/153787379?v=4" width=115><br><sub>Nicolas Haubricht Hainfellner</sub>](https://github.com/NicolasHaubricht) |  [<img src="https://avatars.githubusercontent.com/u/160745486?v=4" width=115><br><sub>Guilherme Melo</sub>](https://github.com/gmelo21)
+| :---: | :---: | :---: | :---: | :---: |
+| RM:554499 | RM:556349 | RM:554865 | RM:556259 | RM:555310
+
 
 ---
 

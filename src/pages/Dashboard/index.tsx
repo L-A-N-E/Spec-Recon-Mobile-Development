@@ -13,61 +13,78 @@ import {
     CircleAlert,
 } from "lucide-react"
 
+import {
+    TARGETS,
+    OSINT_SOURCES,
+    getTotalDiscoveries,
+    getClassifiedCount,
+    getDiscoveryDelta,
+    getTopDiscoveries,
+    getDailyVolume,
+    getCategoryDistribution,
+} from "../../lib/osint"
+
 function Dashboard() {
+
+    const totalDiscoveries = getTotalDiscoveries()
+    const classifiedCount = getClassifiedCount()
+    const delta = getDiscoveryDelta(7)
+    const liveSources = OSINT_SOURCES.filter((s) => s.live).length
 
     const kpis = [
         {
-            title: "Descobertas",
-            value: "1.284",
-            change: "+18%",
-            positive: true,
+            title: "Descobertas OSINT",
+            value: totalDiscoveries.toLocaleString("pt-BR"),
+            change: `${delta.positive ? "+" : "-"}${delta.pct}%`,
+            positive: delta.positive,
             icon: Radar,
         },
 
         {
-            title: "Patentes monitoradas",
-            value: "342",
-            change: "+9%",
+            title: "Concorrentes monitorados",
+            value: String(TARGETS.length),
+            change: "+3",
             positive: true,
             icon: Database,
         },
 
         {
-            title: "Risco estratégico",
-            value: "12",
-            change: "-6%",
+            title: "Specs classificadas",
+            value: classifiedCount.toLocaleString("pt-BR"),
+            change: `${Math.round((classifiedCount / totalDiscoveries) * 100)}%`,
             positive: true,
             icon: ShieldAlert,
         },
 
         {
-            title: "Alertas críticos",
-            value: "7",
-            change: "+2",
-            positive: false,
+            title: "Fontes ativas",
+            value: String(liveSources),
+            change: `+${OSINT_SOURCES.length - liveSources} em breve`,
+            positive: true,
             icon: CircleAlert,
         },
     ]
 
-    const trends = [
-        {
-            title: "Tesla amplia pesquisas em baterias sólidas",
-            source: "USPTO",
-            score: "92%",
-        },
+    const trends = getTopDiscoveries(20, ["800 V", "solid-state", "axial flux", "fast charge", "kWh", "top speed"])
+        .filter((d) => d.value.length <= 60)
+        .slice(0, 3)
+        .map((d) => ({
+            title: `${d.target} · ${d.field}: ${d.value}`,
+            source: d.source,
+            score: `${d.confidence}%`,
+            url: d.source_url,
+        }))
 
-        {
-            title: "BYD acelera produção de motores de fluxo axial",
-            source: "Reuters",
-            score: "87%",
-        },
+    const dailyVolume = getDailyVolume(7)
+    const maxDaily = Math.max(...dailyVolume.map((d) => d.count), 1)
 
-        {
-            title: "Toyota registra novas soluções térmicas para EV",
-            source: "EPO",
-            score: "81%",
-        },
-    ]
+    const categoryDistribution = getCategoryDistribution()
+        .filter((c) => c.category !== "Outros")
+        .slice(0, 4)
+        .map((c) => ({
+            label: c.category,
+            value: `${Math.round((c.count / classifiedCount) * 100)}%`,
+        }))
 
     const modules = [
         {
@@ -284,10 +301,14 @@ function Dashboard() {
 
                             {trends.map((trend) => (
 
-                                <div
+                                <a
                                     key={trend.title}
+                                    href={trend.url}
+                                    target="_blank"
+                                    rel="noreferrer"
                                     className="
                                         group
+                                        block
                                         p-6
                                         hover:bg-white/[0.03]
                                         transition-all
@@ -348,8 +369,14 @@ function Dashboard() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             ))}
+
+                            {trends.length === 0 && (
+                                <div className="p-6 text-sm text-white/35">
+                                    Nenhum sinal de alta relevância no momento.
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -384,7 +411,7 @@ function Dashboard() {
 
                             <div className="mt-8 flex items-end gap-3 h-52">
 
-                                {[25, 40, 65, 90, 55, 72, 100].map((value, index) => (
+                                {dailyVolume.map((day, index) => (
 
                                     <div
                                         key={index}
@@ -392,7 +419,8 @@ function Dashboard() {
                                     >
 
                                         <div
-                                            style={{ height: `${value}%` }}
+                                            style={{ height: `${Math.max((day.count / maxDaily) * 170, 6)}px` }}
+                                            title={`${day.count} descobertas`}
                                             className="
                                                 w-full
                                                 rounded-t-2xl
@@ -406,7 +434,7 @@ function Dashboard() {
                                         />
 
                                         <span className="text-xs text-white/30">
-                                            {index + 1}
+                                            {day.label}
                                         </span>
                                     </div>
                                 ))}
@@ -432,7 +460,7 @@ function Dashboard() {
                                     </div>
 
                                     <h3 className="text-lg font-semibold text-white">
-                                        Fontes monitoradas
+                                        Specs por categoria
                                     </h3>
                                 </div>
 
@@ -441,27 +469,7 @@ function Dashboard() {
 
                             <div className="mt-8 space-y-5">
 
-                                {[
-                                    {
-                                        label: "Patentes",
-                                        value: "68%",
-                                    },
-
-                                    {
-                                        label: "Imprensa",
-                                        value: "52%",
-                                    },
-
-                                    {
-                                        label: "Fóruns",
-                                        value: "37%",
-                                    },
-
-                                    {
-                                        label: "Regulatório",
-                                        value: "22%",
-                                    },
-                                ].map((item) => (
+                                {categoryDistribution.map((item) => (
 
                                     <div key={item.label}>
 

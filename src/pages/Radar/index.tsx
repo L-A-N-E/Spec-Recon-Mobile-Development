@@ -11,85 +11,55 @@ import {
     AlertCircle,
     Search,
     Check,
+    Star,
+    KeyRound,
+    Clock,
 } from "lucide-react"
+
+import {
+    OSINT_SOURCES,
+    CATEGORIES,
+    TARGETS,
+    TIME_WINDOWS,
+    getDiscoveries,
+    parseKeywords,
+    type OsintDiscoveryScored,
+    type TimeWindowId,
+} from "../../lib/osint"
+
+const CATEGORY_OPTIONS = ["Todas", ...CATEGORIES]
 
 function RadarPage() {
 
-    const [target, setTarget] = useState("Tesla")
-    const [category, setCategory] = useState("Bateria")
+    const [target, setTarget] = useState(TARGETS[0].target)
+    const [category, setCategory] = useState("Todas")
     const [keywords, setKeywords] = useState("estado sólido, 800V, fluxo axial")
+    const [timeWindow, setTimeWindow] = useState<TimeWindowId>("30d")
 
     const [scanning, setScanning] = useState(false)
 
-    const [sources, setSources] = useState([
-        {
-            id: 1,
-            label: "Patentes públicas",
-            enabled: true,
-        },
+    const [sources, setSources] = useState(
+        OSINT_SOURCES.map((source) => ({
+            ...source,
+            enabled: source.live, // os 2 que ja estao implementados vem marcados
+        }))
+    )
 
-        {
-            id: 2,
-            label: "Fóruns automotivos",
-            enabled: true,
-        },
+    const [discoveries, setDiscoveries] = useState<OsintDiscoveryScored[]>(() =>
+        runQuery(TARGETS[0].target, "Todas", "estado sólido, 800V, fluxo axial", "30d", OSINT_SOURCES.filter((s) => s.live).map((s) => s.label))
+    )
 
-        {
-            id: 3,
-            label: "Portais de imprensa",
-            enabled: true,
-        },
+    function runQueryFromState() {
+        const enabledSourceLabels = sources.filter((s) => s.enabled).map((s) => s.label)
+        return runQuery(target, category, keywords, timeWindow, enabledSourceLabels)
+    }
 
-        {
-            id: 4,
-            label: "Órgãos regulatórios",
-            enabled: false,
-        },
-
-        {
-            id: 5,
-            label: "Redes sociais técnicas",
-            enabled: false,
-        },
-    ])
-
-    const discoveries = [
-        {
-            id: 1,
-            source: "Patente",
-            competitor: "Tesla",
-            category: "Bateria",
-            confidence: 92,
-            title: "Novo sistema de resfriamento para células 800V",
-            summary:
-                "Documentação encontrada relacionada a eficiência térmica em plataformas de alta voltagem.",
-            date: "2026-05-19",
-            tags: ["800V", "Cooling", "Battery"],
-        },
-
-        {
-            id: 2,
-            source: "Imprensa",
-            competitor: "BYD",
-            category: "Powertrain",
-            confidence: 81,
-            title: "BYD avança em motores de fluxo axial",
-            summary:
-                "Rumores e vazamentos apontam novos protótipos com maior densidade energética.",
-            date: "2026-05-17",
-            tags: ["Axial Flux", "EV", "Motor"],
-        },
-    ]
-
-    function toggleSource(id: number) {
+    function toggleSource(id: string) {
 
         setSources((prev) =>
             prev.map((source) =>
-                source.id === id
-                    ? {
-                        ...source,
-                        enabled: !source.enabled,
-                    }
+                source.id === id && source.live
+                    ? { ...source, enabled: !source.enabled }
                     : source
             )
         )
@@ -100,9 +70,12 @@ function RadarPage() {
         setScanning(true)
 
         setTimeout(() => {
+            setDiscoveries(runQueryFromState())
             setScanning(false)
-        }, 3000)
+        }, 900)
     }
+
+    const targetModel = TARGETS.find((t) => t.target === target)?.model
 
     return (
         <div className="px-6 lg:px-10 py-8 max-w-[1600px] mx-auto">
@@ -168,12 +141,18 @@ function RadarPage() {
                                         transition-colors
                                     "
                                 >
-                                    <option>Tesla</option>
-                                    <option>BYD</option>
-                                    <option>Toyota</option>
-                                    <option>GM</option>
-                                    <option>Rivian</option>
+                                    {TARGETS.map((t) => (
+                                        <option key={t.target} value={t.target}>
+                                            {t.target}
+                                        </option>
+                                    ))}
                                 </select>
+
+                                {targetModel && (
+                                    <div className="mt-2 text-xs text-white/30">
+                                        Modelo de referência: {targetModel}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Categoria */}
@@ -199,11 +178,11 @@ function RadarPage() {
                                         transition-colors
                                     "
                                 >
-                                    <option>Bateria</option>
-                                    <option>Powertrain</option>
-                                    <option>Software</option>
-                                    <option>Aerodinâmica</option>
-                                    <option>Materiais</option>
+                                    {CATEGORY_OPTIONS.map((c) => (
+                                        <option key={c} value={c}>
+                                            {c}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -250,9 +229,11 @@ function RadarPage() {
 
                                 <div className="grid grid-cols-3 gap-2">
 
-                                    {["7d", "30d", "90d"].map((item, index) => (
+                                    {TIME_WINDOWS.map((item) => (
                                         <button
-                                            key={item}
+                                            key={item.id}
+                                            type="button"
+                                            onClick={() => setTimeWindow(item.id)}
                                             className={`
                                                 h-11
                                                 rounded-xl
@@ -263,13 +244,13 @@ function RadarPage() {
                                                 duration-300
                                                 cursor-pointer
 
-                                                ${index === 1
+                                                ${item.id === timeWindow
                                                     ? "bg-blue-500 border-blue-500 text-white"
                                                     : "border-white/10 text-white/60 hover:bg-white/5"
                                                 }
                                             `}
                                         >
-                                            {item}
+                                            {item.label}
                                         </button>
                                     ))}
                                 </div>
@@ -295,48 +276,98 @@ function RadarPage() {
 
                                 <button
                                     key={source.id}
+                                    type="button"
                                     onClick={() => toggleSource(source.id)}
+                                    disabled={!source.live}
                                     className={`
                                         w-full
                                         flex
-                                        items-center
+                                        items-start
                                         gap-3
                                         p-4
                                         rounded-2xl
                                         border
                                         transition-all
                                         duration-300
-                                        cursor-pointer
 
-                                        ${source.enabled
+                                        ${!source.live
+                                            ? "opacity-40 cursor-not-allowed border-white/5"
+                                            : "cursor-pointer"
+                                        }
+
+                                        ${source.enabled && source.live
                                             ? "bg-blue-500/10 border-blue-500/20"
-                                            : "border-white/5 hover:bg-white/4"
+                                            : source.live
+                                                ? "border-white/5 hover:bg-white/4"
+                                                : ""
                                         }
                                     `}
                                 >
 
                                     <div className={`
+                                        mt-0.5
                                         w-5
                                         h-5
+                                        shrink-0
                                         rounded-md
                                         border
                                         flex
                                         items-center
                                         justify-center
 
-                                        ${source.enabled
+                                        ${source.enabled && source.live
                                             ? "bg-blue-500 border-blue-500"
                                             : "border-white/15"
                                         }
                                     `}>
-                                        {source.enabled && (
+                                        {source.enabled && source.live && (
                                             <Check className="w-3 h-3 text-white" />
                                         )}
                                     </div>
 
-                                    <span className="text-sm text-white/75">
-                                        {source.label}
-                                    </span>
+                                    <div className="flex-1 text-left">
+
+                                        <div className="flex items-center gap-2 flex-wrap">
+
+                                            <span className="text-sm text-white/75">
+                                                {source.label}
+                                            </span>
+
+                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+                                                {source.classification}
+                                            </span>
+
+                                            {source.live ? (
+                                                <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[10px] uppercase tracking-wider text-green-400">
+                                                    Ativo
+                                                </span>
+                                            ) : (
+                                                <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] uppercase tracking-wider text-white/30">
+                                                    Em breve
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="mt-1 flex items-center gap-2">
+
+                                            <div className="flex items-center gap-0.5">
+                                                {Array.from({ length: 5 }).map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-3 h-3 ${
+                                                            i < source.reliability
+                                                                ? "text-blue-400 fill-blue-400"
+                                                                : "text-white/15"
+                                                        }`}
+                                                    />
+                                                ))}
+                                            </div>
+
+                                            <span className="text-xs text-white/30">
+                                                {source.note}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </button>
                             ))}
                         </div>
@@ -379,7 +410,8 @@ function RadarPage() {
 
                         <p className="text-xs text-white/35 leading-relaxed">
                             Todas as coletas utilizam apenas fontes públicas
-                            e dados acessíveis legalmente.
+                            e dados acessíveis legalmente (hoje: Wikipedia e
+                            EV Database).
                         </p>
                     </div>
                 </div>
@@ -405,7 +437,7 @@ function RadarPage() {
 
                             <Sparkles className="w-4 h-4 text-blue-400" />
 
-                            Ordenado por IA
+                            Ordenado por relevância
                         </div>
                     </div>
 
@@ -428,8 +460,23 @@ function RadarPage() {
                             </div>
 
                             <div className="mt-2 text-sm text-white/35">
-                                USPTO · Reuters · Fóruns · Automotive News
+                                {sources.filter((s) => s.enabled && s.live).map((s) => s.label).join(" · ") || "Nenhuma fonte ativa"}
                             </div>
+                        </div>
+
+                    ) : discoveries.length === 0 ? (
+
+                        <div className="py-24 px-6 text-center">
+
+                            <AlertCircle className="w-10 h-10 text-white/20 mx-auto mb-4" />
+
+                            <h3 className="text-lg font-medium text-white">
+                                Nenhuma descoberta encontrada
+                            </h3>
+
+                            <p className="mt-2 text-sm text-white/35">
+                                Ajuste os filtros (concorrente, categoria, janela temporal ou fontes) e tente novamente.
+                            </p>
                         </div>
 
                     ) : (
@@ -440,12 +487,14 @@ function RadarPage() {
 
                                 <div
                                     key={item.id}
-                                    className="
+                                    className={`
                                         p-6
                                         hover:bg-white/[0.03]
                                         transition-colors
                                         duration-300
-                                    "
+
+                                        ${item.keywordMatch ? "bg-blue-500/[0.03]" : ""}
+                                    `}
                                 >
 
                                     <div className="flex items-start gap-5">
@@ -487,7 +536,7 @@ function RadarPage() {
                                                 </span>
 
                                                 <span className="text-sm text-white/45">
-                                                    {item.competitor}
+                                                    {item.target}
                                                 </span>
 
                                                 <span className="text-white/15">
@@ -498,11 +547,18 @@ function RadarPage() {
                                                     {item.category}
                                                 </span>
 
+                                                {item.keywordMatch && (
+                                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 text-[11px]">
+                                                        <KeyRound className="w-3 h-3" />
+                                                        palavra-chave
+                                                    </span>
+                                                )}
+
                                                 <div className="ml-auto flex items-center gap-1 text-xs text-white/30">
 
                                                     <Calendar className="w-3 h-3" />
 
-                                                    {item.date}
+                                                    {item.discovered_at}
                                                 </div>
                                             </div>
 
@@ -511,53 +567,50 @@ function RadarPage() {
                                                 text-lg
                                                 font-semibold
                                                 text-white
-                                                hover:text-blue-400
-                                                transition-colors
-                                                cursor-pointer
                                             ">
-                                                {item.title}
+                                                {item.field}
                                             </h3>
 
                                             {/* Summary */}
-                                            <p className="mt-3 text-sm leading-relaxed text-white/45">
-                                                {item.summary}
+                                            <p className="mt-3 text-sm leading-relaxed text-white/45 break-words">
+                                                {item.value}
                                             </p>
 
                                             {/* Tags */}
                                             <div className="mt-4 flex flex-wrap items-center gap-2">
 
-                                                {item.tags.map((tag) => (
-                                                    <span
-                                                        key={tag}
-                                                        className="
-                                                            px-3
-                                                            py-1
-                                                            rounded-full
-                                                            bg-white/5
-                                                            text-xs
-                                                            text-white/45
-                                                            font-mono
-                                                        "
-                                                    >
-                                                        {tag}
-                                                    </span>
-                                                ))}
-
-                                                <button className="
-                                                    ml-auto
-                                                    flex
-                                                    items-center
-                                                    gap-2
-                                                    text-sm
-                                                    text-blue-400
-                                                    hover:text-blue-300
-                                                    transition-colors
-                                                    cursor-pointer
+                                                <span className="
+                                                    px-3
+                                                    py-1
+                                                    rounded-full
+                                                    bg-white/5
+                                                    text-xs
+                                                    text-white/45
+                                                    font-mono
                                                 ">
+                                                    {item.model}
+                                                </span>
+
+                                                <a
+                                                    href={item.source_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="
+                                                        ml-auto
+                                                        flex
+                                                        items-center
+                                                        gap-2
+                                                        text-sm
+                                                        text-blue-400
+                                                        hover:text-blue-300
+                                                        transition-colors
+                                                        cursor-pointer
+                                                    "
+                                                >
                                                     Ver fonte
 
                                                     <ExternalLink className="w-4 h-4" />
-                                                </button>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -565,26 +618,34 @@ function RadarPage() {
                             ))}
                         </div>
                     )}
-
-                    {!scanning && discoveries.length === 0 && (
-
-                        <div className="py-24 px-6 text-center">
-
-                            <AlertCircle className="w-10 h-10 text-white/20 mx-auto mb-4" />
-
-                            <h3 className="text-lg font-medium text-white">
-                                Nenhuma descoberta encontrada
-                            </h3>
-
-                            <p className="mt-2 text-sm text-white/35">
-                                Ajuste os filtros e tente novamente.
-                            </p>
-                        </div>
-                    )}
                 </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-8 flex items-center justify-center gap-2 text-xs text-white/25">
+                <Clock className="w-3.5 h-3.5" />
+                Dados coletados via osint-radar (Python) · Wikipedia + EV Database
             </div>
         </div>
     )
+}
+
+function runQuery(
+    target: string,
+    category: string,
+    keywordsInput: string,
+    timeWindow: TimeWindowId,
+    enabledSourceLabels: string[]
+) {
+    const windowDays = TIME_WINDOWS.find((w) => w.id === timeWindow)?.days ?? 30
+
+    return getDiscoveries({
+        target,
+        category: category === "Todas" ? undefined : category,
+        keywords: parseKeywords(keywordsInput),
+        windowDays,
+        enabledSources: enabledSourceLabels,
+    })
 }
 
 export default RadarPage

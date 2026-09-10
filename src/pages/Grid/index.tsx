@@ -6,12 +6,14 @@ import {
     TrendingDown,
     Minus,
     Gauge,
-    BatteryCharging,
-    Cpu,
     ArrowRightLeft,
     Fuel,
     Weight,
+    Satellite,
+    ExternalLink,
 } from "lucide-react"
+
+import { getAllVehicleSpecs, getDiscoveries } from "../../lib/osint"
 
 type VehicleSpec = {
     id: string
@@ -19,15 +21,21 @@ type VehicleSpec = {
     name: string
     segment: string
     powertrain: string
-    power_cv: number
-    torque_kgfm: number
-    autonomy_km: number
-    tank_l: number
-    acceleration_0_100: number
-    top_speed_kmh: number
-    weight_kg: number
-    towing_kg: number
-    price_brl: number
+    power_cv?: number
+    torque_kgfm?: number
+    autonomy_km?: number
+    tank_l?: number
+    acceleration_0_100?: number
+    top_speed_kmh?: number
+    weight_kg?: number
+    towing_kg?: number
+    price_brl?: number
+    battery_kwh?: number
+    source?: "curated" | "osint"
+    sourceUrls?: {
+        wikipedia?: string | null
+        evdatabase?: string | null
+    }
 }
 
 const fordVehicles: VehicleSpec[] = [
@@ -83,7 +91,7 @@ const fordVehicles: VehicleSpec[] = [
     },
 ]
 
-const competitorVehicles: VehicleSpec[] = [
+const iceCompetitorVehicles: VehicleSpec[] = [
     {
         id: "hilux-grs",
         brand: "Toyota",
@@ -135,6 +143,34 @@ const competitorVehicles: VehicleSpec[] = [
         price_brl: 540000,
     },
 ]
+
+// Concorrentes vindos do osint-radar (Wikipedia + EV Database) - specs
+// numericas normalizadas em osint-radar/build_dataset.py. Sem preco em
+// BRL (nenhuma das 2 fontes publica isso) e alguns campos ficam
+// indisponiveis quando a marca nao tem pagina no EV Database (GM, Rivian).
+const osintCompetitorVehicles: VehicleSpec[] = getAllVehicleSpecs().map((v) => ({
+    id: `osint-${v.target.toLowerCase().replace(/\s+/g, "-")}`,
+    brand: v.target,
+    name: v.model,
+    segment: "EV",
+    powertrain: "Elétrico",
+    power_cv: v.power_cv ?? undefined,
+    torque_kgfm: v.torque_kgfm ?? undefined,
+    autonomy_km: v.autonomy_km ?? undefined,
+    tank_l: 0,
+    acceleration_0_100: v.acceleration_0_100 ?? undefined,
+    top_speed_kmh: v.top_speed_kmh ?? undefined,
+    weight_kg: v.weight_kg ?? undefined,
+    towing_kg: v.towing_kg ?? undefined,
+    battery_kwh: v.battery_kwh ?? undefined,
+    source: "osint",
+    sourceUrls: {
+        wikipedia: v.wikipedia_url,
+        evdatabase: v.evdatabase_url,
+    },
+}))
+
+const competitorVehicles: VehicleSpec[] = [...iceCompetitorVehicles, ...osintCompetitorVehicles]
 
 const specs: {
     key: keyof VehicleSpec
@@ -222,15 +258,29 @@ function Grid() {
         [competitorId]
     )
 
+    const competitorDiscoveries = useMemo(
+        () =>
+            competitor.source === "osint"
+                ? getDiscoveries({ target: competitor.brand, windowDays: 90 }).slice(0, 6)
+                : [],
+        [competitor]
+    )
+
     const fordWins = specs.filter((spec) =>
         isWinner(
-            ford[spec.key] as number,
-            competitor[spec.key] as number,
+            ford[spec.key] as number | undefined,
+            competitor[spec.key] as number | undefined,
             spec.higherBetter
         )
     ).length
 
-    const competitorWins = specs.length - fordWins
+    const competitorWins = specs.filter((spec) =>
+        isWinner(
+            competitor[spec.key] as number | undefined,
+            ford[spec.key] as number | undefined,
+            spec.higherBetter
+        )
+    ).length
 
     return (
         <div className="px-6 lg:px-10 py-8 text-white">
@@ -360,8 +410,8 @@ function Grid() {
 
                     {specs.map((spec) => {
 
-                        const fordValue = ford[spec.key] as number
-                        const competitorValue = competitor[spec.key] as number
+                        const fordValue = ford[spec.key] as number | undefined
+                        const competitorValue = competitor[spec.key] as number | undefined
 
                         const fordWin = isWinner(
                             fordValue,
@@ -376,8 +426,9 @@ function Grid() {
                         )
 
                         const delta =
-                            ((fordValue - competitorValue) /
-                                competitorValue) * 100
+                            fordValue != null && competitorValue
+                                ? ((fordValue - competitorValue) / competitorValue) * 100
+                                : null
 
                         return (
                             <div
@@ -403,7 +454,9 @@ function Grid() {
 
                                         <div className="flex items-center gap-1 text-xs text-white/40">
 
-                                            {delta > 0 ? (
+                                            {delta === null ? (
+                                                <Minus className="w-3 h-3" />
+                                            ) : delta > 0 ? (
                                                 <TrendingUp className="w-3 h-3 text-green-400" />
                                             ) : delta < 0 ? (
                                                 <TrendingDown className="w-3 h-3 text-red-400" />
@@ -411,7 +464,7 @@ function Grid() {
                                                 <Minus className="w-3 h-3" />
                                             )}
 
-                                            {Math.abs(delta).toFixed(1)}%
+                                            {delta === null ? "—" : `${Math.abs(delta).toFixed(1)}%`}
                                         </div>
                                     </div>
 
@@ -463,7 +516,9 @@ function Grid() {
 
                                         <div className="mt-1 flex items-center justify-center gap-1 text-xs text-white/40">
 
-                                            {delta > 0 ? (
+                                            {delta === null ? (
+                                                <Minus className="w-3 h-3" />
+                                            ) : delta > 0 ? (
                                                 <TrendingUp className="w-3 h-3 text-green-400" />
                                             ) : delta < 0 ? (
                                                 <TrendingDown className="w-3 h-3 text-red-400" />
@@ -471,7 +526,7 @@ function Grid() {
                                                 <Minus className="w-3 h-3" />
                                             )}
 
-                                            {Math.abs(delta).toFixed(1)}%
+                                            {delta === null ? "—" : `${Math.abs(delta).toFixed(1)}%`}
                                         </div>
                                     </div>
 
@@ -506,9 +561,71 @@ function Grid() {
                 <InsightCard
                     icon={Weight}
                     title="Capacidade"
-                    text={`${competitor.name} suporta até ${competitor.towing_kg}kg de reboque.`}
+                    text={
+                        competitor.towing_kg != null
+                            ? `${competitor.name} suporta até ${competitor.towing_kg}kg de reboque.`
+                            : `${competitor.name} não tem capacidade de reboque divulgada nas fontes coletadas.`
+                    }
                 />
             </div>
+
+            {/* OSINT provenance */}
+            {competitor.source === "osint" && (
+                <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] overflow-hidden">
+
+                    <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
+
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                            <Satellite className="w-5 h-5 text-blue-400" />
+                        </div>
+
+                        <div>
+                            <h3 className="font-semibold text-lg">
+                                Descobertas OSINT · {competitor.brand}
+                            </h3>
+
+                            <p className="text-sm text-white/40">
+                                Campos brutos coletados via Radar (Wikipedia + EV Database) para este concorrente
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="divide-y divide-white/5">
+
+                        {competitorDiscoveries.map((item) => (
+                            <a
+                                key={item.id}
+                                href={item.source_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                            >
+                                <div className="min-w-0">
+                                    <div className="text-sm font-medium truncate">
+                                        {item.field}
+                                    </div>
+                                    <div className="text-xs text-white/40 truncate">
+                                        {item.value}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[11px] uppercase tracking-wider">
+                                        {item.source}
+                                    </span>
+                                    <ExternalLink className="w-4 h-4 text-white/25" />
+                                </div>
+                            </a>
+                        ))}
+
+                        {competitorDiscoveries.length === 0 && (
+                            <div className="px-6 py-8 text-sm text-white/35 text-center">
+                                Nenhuma descoberta recente para este concorrente.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Footer */}
             <div className="mt-10 text-center text-xs uppercase tracking-[0.25em] text-white/20">
@@ -561,8 +678,18 @@ function VehicleCard({
                     </div>
                 </div>
 
-                <div className="px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
-                    {vehicle.brand}
+                <div className="flex flex-col items-end gap-2">
+
+                    <div className="px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+                        {vehicle.brand}
+                    </div>
+
+                    {vehicle.source === "osint" && (
+                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] uppercase tracking-wider text-white/40">
+                            <Satellite className="w-3 h-3" />
+                            OSINT
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -607,14 +734,47 @@ function VehicleCard({
 
                 <MiniInfo
                     label="Potência"
-                    value={`${vehicle.power_cv}cv`}
+                    value={vehicle.power_cv != null ? `${vehicle.power_cv}cv` : "N/D"}
                 />
 
                 <MiniInfo
                     label="Torque"
-                    value={`${vehicle.torque_kgfm}kgfm`}
+                    value={vehicle.torque_kgfm != null ? `${vehicle.torque_kgfm}kgfm` : "N/D"}
                 />
             </div>
+
+            {vehicle.source === "osint" && (vehicle.sourceUrls?.wikipedia || vehicle.sourceUrls?.evdatabase) && (
+                <div className="mt-4 flex flex-wrap items-center gap-3 pt-4 border-t border-white/5">
+
+                    <span className="text-[11px] uppercase tracking-wider text-white/25">
+                        Fonte OSINT
+                    </span>
+
+                    {vehicle.sourceUrls?.wikipedia && (
+                        <a
+                            href={vehicle.sourceUrls.wikipedia}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                            Wikipedia
+                            <ExternalLink className="w-3 h-3" />
+                        </a>
+                    )}
+
+                    {vehicle.sourceUrls?.evdatabase && (
+                        <a
+                            href={vehicle.sourceUrls.evdatabase}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                            EV Database
+                            <ExternalLink className="w-3 h-3" />
+                        </a>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
@@ -646,11 +806,25 @@ function SpecValue({
     winner,
     align,
 }: {
-    value: number
+    value: number | undefined
     unit: string
     winner: boolean
     align: "left" | "right"
 }) {
+
+    if (value == null) {
+        return (
+            <div className={`flex items-center gap-2 ${align === "right" ? "justify-end" : "justify-start"}`}>
+                <span className="text-2xl font-bold tabular-nums text-white/20">
+                    —
+                </span>
+
+                <span className="text-sm text-white/20">
+                    N/D
+                </span>
+            </div>
+        )
+    }
 
     const formatted =
         unit === "R$"
@@ -772,10 +946,11 @@ function InsightCard({
 }
 
 function isWinner(
-    a: number,
-    b: number,
+    a: number | undefined,
+    b: number | undefined,
     higherBetter: boolean
 ) {
+    if (a == null || b == null) return false
     if (a === b) return false
 
     return higherBetter

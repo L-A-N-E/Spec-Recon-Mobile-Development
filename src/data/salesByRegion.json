@@ -1,0 +1,201 @@
+{
+  "meta": {
+    "month_label": "Set/2026",
+    "n_models_sample": 68,
+    "source": "Fenabrave (via fenabrave.online)",
+    "source_url": "https://www.fenabrave.online/",
+    "generated_at": "2026-09-10T19:05:57.027785",
+    "note": "Amostra dos 68 modelos mais vendidos do Brasil em Set/2026 (não o total de emplacamentos do estado - modelos de nicho regional fora do top nacional não entram). Snapshot de 1 mês, não acumulado do ano."
+  },
+  "by_state": [
+    {
+      "uf": "MG",
+      "name": "Minas Gerais",
+      "region": "Sudeste",
+      "units": 9887
+    },
+    {
+      "uf": "SP",
+      "name": "Sao Paulo",
+      "region": "Sudeste",
+      "units": 8974
+    },
+    {
+      "uf": "PR",
+      "name": "Parana",
+      "region": "Sul",
+      "units": 3262
+    },
+    {
+      "uf": "RS",
+      "name": "Rio Grande do Sul",
+      "region": "Sul",
+      "units": 1878
+    },
+    {
+      "uf": "SC",
+      "name": "Santa Catarina",
+      "region": "Sul",
+      "units": 1611
+    },
+    {
+      "uf": "GO",
+      "name": "Goias",
+      "region": "Centro-Oeste",
+      "units": 1489
+    },
+    {
+      "uf": "BA",
+      "name": "Bahia",
+      "region": "Nordeste",
+      "units": 1378
+    },
+    {
+      "uf": "DF",
+      "name": "Distrito Federal",
+      "region": "Centro-Oeste",
+      "units": 1356
+    },
+    {
+      "uf": "RJ",
+      "name": "Rio de Janeiro",
+      "region": "Sudeste",
+      "units": 1301
+    },
+    {
+      "uf": "PE",
+      "name": "Pernambuco",
+      "region": "Nordeste",
+      "units": 1218
+    },
+    {
+      "uf": "CE",
+      "name": "Ceara",
+      "region": "Nordeste",
+      "units": 1091
+    },
+    {
+      "uf": "ES",
+      "name": "Espirito Santo",
+      "region": "Sudeste",
+      "units": 961
+    },
+    {
+      "uf": "PA",
+      "name": "Para",
+      "region": "Norte",
+      "units": 824
+    },
+    {
+      "uf": "AM",
+      "name": "Amazonas",
+      "region": "Norte",
+      "units": 796
+    },
+    {
+      "uf": "MT",
+      "name": "Mato Grosso",
+      "region": "Centro-Oeste",
+      "units": 688
+    },
+    {
+      "uf": "PB",
+      "name": "Paraiba",
+      "region": "Nordeste",
+      "units": 607
+    },
+    {
+      "uf": "AL",
+      "name": "Alagoas",
+      "region": "Nordeste",
+      "units": 540
+    },
+    {
+      "uf": "MS",
+      "name": "Mato Grosso do Sul",
+      "region": "Centro-Oeste",
+      "units": 518
+    },
+    {
+      "uf": "RN",
+      "name": "Rio Grande do Norte",
+      "region": "Nordeste",
+      "units": 479
+    },
+    {
+      "uf": "MA",
+      "name": "Maranhao",
+      "region": "Nordeste",
+      "units": 446
+    },
+    {
+      "uf": "RO",
+      "name": "Rondonia",
+      "region": "Norte",
+      "units": 375
+    },
+    {
+      "uf": "PI",
+      "name": "Piaui",
+      "region": "Nordeste",
+      "units": 328
+    },
+    {
+      "uf": "SE",
+      "name": "Sergipe",
+      "region": "Nordeste",
+      "units": 313
+    },
+    {
+      "uf": "TO",
+      "name": "Tocantins",
+      "region": "Norte",
+      "units": 253
+    },
+    {
+      "uf": "AC",
+      "name": "Acre",
+      "region": "Norte",
+      "units": 150
+    },
+    {
+      "uf": "AP",
+      "name": "Amapa",
+      "region": "Norte",
+      "units": 140
+    },
+    {
+      "uf": "RR",
+      "name": "Roraima",
+      "region": "Norte",
+      "units": 112
+    }
+  ],
+  "by_region": [
+    {
+      "region": "Sudeste",
+      "units": 21123,
+      "pct": 51.6
+    },
+    {
+      "region": "Sul",
+      "units": 6751,
+      "pct": 16.5
+    },
+    {
+      "region": "Nordeste",
+      "units": 6400,
+      "pct": 15.6
+    },
+    {
+      "region": "Centro-Oeste",
+      "units": 4051,
+      "pct": 9.9
+    },
+    {
+      "region": "Norte",
+      "units": 2650,
+      "pct": 6.5
+    }
+  ]
+}

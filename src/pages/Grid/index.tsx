@@ -149,7 +149,7 @@ const iceCompetitorVehicles: VehicleSpec[] = [
 // BRL (nenhuma das 2 fontes publica isso) e alguns campos ficam
 // indisponiveis quando a marca nao tem pagina no EV Database (GM, Rivian).
 const osintCompetitorVehicles: VehicleSpec[] = getAllVehicleSpecs().map((v) => ({
-    id: `osint-${v.target.toLowerCase().replace(/\s+/g, "-")}`,
+    id: `osint-${v.target}-${v.model}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     brand: v.target,
     name: v.model,
     segment: "EV",
@@ -261,7 +261,7 @@ function Grid() {
     const competitorDiscoveries = useMemo(
         () =>
             competitor.source === "osint"
-                ? getDiscoveries({ target: competitor.brand, windowDays: 90 }).slice(0, 6)
+                ? getDiscoveries({ target: competitor.brand, model: competitor.name, windowDays: 90 }).slice(0, 6)
                 : [],
         [competitor]
     )
@@ -304,27 +304,28 @@ function Grid() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-
-                    <div className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03]">
-                        <div className="text-xs text-white/40 uppercase">
+                <div className="flex w-full gap-2 sm:w-auto sm:gap-3">
+                    
+                    {/* Bloco 1: Specs analisadas */}
+                    <div className="flex-1 sm:flex-none flex flex-col items-center justify-center px-3 py-3 sm:px-4 sm:py-2 rounded-xl border border-white/10 bg-white/[0.03]">
+                        <div className="text-[10px] md:text-xs text-white/40 uppercase whitespace-nowrap text-center">
                             Specs analisadas
                         </div>
-
-                        <div className="text-2xl font-bold mt-1">
+                        <div className="text-4xl font-bold mt-1 text-white">
                             {specs.length}
                         </div>
                     </div>
 
-                    <div className="px-4 py-2 rounded-xl border border-blue-500/20 bg-blue-500/10">
-                        <div className="text-xs text-blue-300 uppercase">
+                    {/* Bloco 2: Score Ford */}
+                    <div className="flex-1 sm:flex-none flex flex-col items-center justify-center px-3 py-3 sm:px-4 sm:py-2 rounded-xl border border-blue-500/20 bg-blue-500/10">
+                        <div className="text-[10px] md:text-xs text-blue-300 uppercase whitespace-nowrap text-center">
                             Score Ford
                         </div>
-
-                        <div className="text-2xl font-bold mt-1">
+                        <div className="text-4xl font-bold mt-1 text-white">
                             {fordWins}
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -650,6 +651,14 @@ function VehicleCard({
     onChange: (value: string) => void
     highlight?: boolean
 }) {
+    const brands = Array.from(new Set(vehicles.map((v) => v.brand))).sort((a, b) =>
+        a.localeCompare(b, "pt-BR")
+    )
+
+    const modelsForBrand = vehicles
+        .filter((v) => v.brand === vehicle.brand)
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+
     return (
         <div
             className={`
@@ -693,32 +702,71 @@ function VehicleCard({
                 </div>
             </div>
 
-            <select
-                value={selected}
-                onChange={(e) => onChange(e.target.value)}
-                className="
-                    w-full
-                    h-12
-                    px-4
-                    rounded-xl
-                    bg-black/40
-                    border
-                    border-white/10
-                    text-white
-                    outline-none
-                    focus:border-blue-500
-                    transition-colors
-                "
-            >
-                {vehicles.map((vehicle) => (
-                    <option
-                        key={vehicle.id}
-                        value={vehicle.id}
+            <div className="grid grid-cols-2 gap-3">
+
+                <div>
+                    <label className="block text-xs uppercase tracking-[0.2em] text-white/30 mb-2">
+                        Marca
+                    </label>
+
+                    <select
+                        value={vehicle.brand}
+                        onChange={(e) => {
+                            const firstOfBrand = vehicles.find((v) => v.brand === e.target.value)
+                            if (firstOfBrand) onChange(firstOfBrand.id)
+                        }}
+                        className="
+                            w-full
+                            h-12
+                            px-4
+                            rounded-xl
+                            bg-black/40
+                            border
+                            border-white/10
+                            text-white
+                            outline-none
+                            focus:border-blue-500
+                            transition-colors
+                        "
                     >
-                        {vehicle.name}
-                    </option>
-                ))}
-            </select>
+                        {brands.map((brand) => (
+                            <option key={brand} value={brand}>
+                                {brand}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-xs uppercase tracking-[0.2em] text-white/30 mb-2">
+                        Modelo
+                    </label>
+
+                    <select
+                        value={selected}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="
+                            w-full
+                            h-12
+                            px-4
+                            rounded-xl
+                            bg-black/40
+                            border
+                            border-white/10
+                            text-white
+                            outline-none
+                            focus:border-blue-500
+                            transition-colors
+                        "
+                    >
+                        {modelsForBrand.map((v) => (
+                            <option key={v.id} value={v.id}>
+                                {v.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4 mt-5">
 

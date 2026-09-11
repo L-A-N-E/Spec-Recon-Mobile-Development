@@ -21,6 +21,8 @@ export type OsintDiscovery = {
 export type OsintVehicleSpec = {
     target: string
     model: string
+    start_year: number | null
+    end_year: number | null
     battery_kwh: number | null
     power_cv: number | null
     torque_kgfm: number | null
@@ -42,9 +44,14 @@ const discoveries = rawDiscoveries as OsintDiscovery[]
 const vehicleSpecs = rawVehicleSpecs as OsintVehicleSpec[]
 
 // ---------------------------------------------------------------------
-// Fontes de coleta - mesma classificacao usada na tela Radar. Wikipedia e
-// EV Database sao as 2 unicas "live" (de fato usadas no scan); o resto
-// fica listado/classificado para o usuario ver o que vem a seguir.
+// Fontes de coleta - mesma classificacao usada na tela Radar. Wikipedia,
+// EV Database e iCarros sao "live" (de fato usadas no scan e com parser
+// validado contra HTML real); Webmotors/Quatro Rodas/UOL Carros/
+// Autoesporte foram cadastradas no osint_radar.py mas ainda usam
+// localizacao via DuckDuckGo sem validacao completa (o DDG passou a
+// bloquear com CAPTCHA depois de poucas chamadas em sequencia) - ficam
+// como "Em breve" ate isso ser confirmado. O resto fica listado/
+// classificado para o usuario ver o que vem a seguir.
 // ---------------------------------------------------------------------
 
 export type SourceMeta = {
@@ -72,6 +79,46 @@ export const OSINT_SOURCES: SourceMeta[] = [
         reliability: 5,
         live: true,
         note: "Base técnica independente focada em veículos elétricos.",
+    },
+    {
+        id: "icarros",
+        label: "iCarros",
+        classification: "Ficha técnica (BR)",
+        reliability: 3,
+        live: true,
+        note: "Cobre modelos vendidos só no Brasil (combustão/híbrido) fora do EV Database.",
+    },
+    {
+        id: "webmotors",
+        label: "Webmotors",
+        classification: "Ficha técnica (BR)",
+        reliability: 3,
+        live: false,
+        note: "Em breve — localização via busca ainda não confiável.",
+    },
+    {
+        id: "quatro_rodas",
+        label: "Quatro Rodas",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 3,
+        live: false,
+        note: "Em breve — cobertura ainda não validada.",
+    },
+    {
+        id: "uol_carros",
+        label: "UOL Carros",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 3,
+        live: false,
+        note: "Em breve — cobertura ainda não validada.",
+    },
+    {
+        id: "autoesporte",
+        label: "Autoesporte",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 3,
+        live: false,
+        note: "Em breve — cobertura ainda não validada.",
     },
     {
         id: "patents",
@@ -130,8 +177,20 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number]
 
-// concorrentes cobertos hoje pelo osint-radar, na ordem coletada
-export const TARGETS = vehicleSpecs.map((v) => ({ target: v.target, model: v.model }))
+// marcas cobertas hoje pelo osint-radar (unicas - cada marca pode ter varios
+// modelos coletados, ver getAllVehicleSpecs/getModelsForTarget). "model" aqui
+// e so o 1o modelo coletado dessa marca, usado como dica/placeholder na UI.
+export const TARGETS = (() => {
+    const seen = new Map<string, string>()
+    for (const v of vehicleSpecs) {
+        if (!seen.has(v.target)) seen.set(v.target, v.model)
+    }
+    return [...seen.entries()].map(([target, model]) => ({ target, model }))
+})()
+
+export function getModelsForTarget(target: string): OsintVehicleSpec[] {
+    return vehicleSpecs.filter((v) => v.target === target)
+}
 
 export const TIME_WINDOWS = [
     { id: "7d", label: "7d", days: 7 },
@@ -196,17 +255,65 @@ function score(row: OsintDiscovery, keywords: string[]): OsintDiscoveryScored {
 
 export type DiscoveryFilter = {
     target?: string
+    /** busca textual no nome do modelo (ex.: "model 3") - substring, sem acento/caixa */
+    model?: string
+    /** intervalo de ano de producao - so entra no resultado o veiculo cujo
+     * periodo de producao tem sobreposicao com [yearFrom, yearTo] */
+    yearFrom?: number
+    yearTo?: number
     category?: string
     keywords?: string[]
     windowDays?: number
     enabledSources?: string[]
 }
 
+function hasPreciseFilter(filter: DiscoveryFilter): boolean {
+    return Boolean(filter.target || filter.model || filter.yearFrom != null || filter.yearTo != null)
+}
+
+/** Marca+modelo (e opcionalmente ano) que batem com os criterios "precisos"
+ * da busca (marca/modelo/ano) - usado pra restringir quais VEICULOS (nao so
+ * marcas - uma marca pode ter varios modelos coletados) entram no resultado
+ * antes de aplicar categoria/palavras-chave/etc. */
+export function getEligibleVehicles(filter: DiscoveryFilter): OsintVehicleSpec[] {
+    const modelQuery = filter.model ? norm(filter.model) : ""
+
+    return vehicleSpecs
+        .filter((v) => !filter.target || v.target === filter.target)
+        .filter((v) => !modelQuery || norm(v.model).includes(modelQuery))
+        .filter((v) => {
+            if (filter.yearFrom == null && filter.yearTo == null) return true
+            if (v.start_year == null) return false // sem dado de ano -> fora de uma busca precisa por ano
+
+            const vEnd = v.end_year ?? new Date().getFullYear()
+            const from = filter.yearFrom ?? -Infinity
+            const to = filter.yearTo ?? Infinity
+            return v.start_year <= to && vEnd >= from
+        })
+}
+
+function vehicleKey(target: string, model: string): string {
+    return `${target}::${model}`
+}
+
+export function getYearBounds(): { min: number; max: number } {
+    const now = new Date().getFullYear()
+    const starts = vehicleSpecs.map((v) => v.start_year).filter((y): y is number => y != null)
+    const ends = vehicleSpecs.map((v) => v.end_year ?? now).filter((y): y is number => y != null)
+    return {
+        min: starts.length ? Math.min(...starts) : now,
+        max: ends.length ? Math.max(...ends) : now,
+    }
+}
+
 export function getDiscoveries(filter: DiscoveryFilter = {}): OsintDiscoveryScored[] {
     const keywords = filter.keywords ?? []
+    const eligibleKeys = hasPreciseFilter(filter)
+        ? new Set(getEligibleVehicles(filter).map((v) => vehicleKey(v.target, v.model)))
+        : null
 
     return discoveries
-        .filter((row) => !filter.target || row.target === filter.target)
+        .filter((row) => !eligibleKeys || eligibleKeys.has(vehicleKey(row.target, row.model)))
         .filter((row) => !filter.category || row.category === filter.category)
         .filter((row) => !filter.windowDays || withinWindow(row.discovered_at, filter.windowDays))
         .filter((row) => !filter.enabledSources || filter.enabledSources.includes(row.source))
@@ -262,10 +369,6 @@ export function getDailyVolume(days: number): { label: string; count: number }[]
     return buckets
 }
 
-export function getVehicleSpec(target: string): OsintVehicleSpec | undefined {
-    return vehicleSpecs.find((v) => v.target === target)
-}
-
 export function getAllVehicleSpecs(): OsintVehicleSpec[] {
     return vehicleSpecs
 }
@@ -292,4 +395,61 @@ export function getDiscoveryDelta(days = 7): { pct: number; positive: boolean } 
     if (prior === 0) return { pct: recent > 0 ? 100 : 0, positive: true }
     const pct = Math.round(((recent - prior) / prior) * 100)
     return { pct: Math.abs(pct), positive: pct >= 0 }
+}
+
+// ---------------------------------------------------------------------
+// Contexto para o Assistente (RAG simples) - dado a pergunta do usuario,
+// busca no dataset OSINT o que for relevante (marca citada + palavras-chave)
+// e devolve como texto pra injetar no prompt do modelo local (Ollama).
+// ---------------------------------------------------------------------
+
+const STOPWORDS = new Set([
+    "qual", "quais", "quando", "quanto", "quanta", "quantos", "quantas",
+    "como", "para", "sobre", "esse", "essa", "este", "esta", "aquele",
+    "aquela", "mais", "menos", "entre", "onde", "porque", "quero", "saber",
+    "pode", "poderia", "fazer", "muito", "pouco", "assim", "dessa", "desse",
+    "tudo", "nada", "alguma", "algum", "comparar", "comparativo", "diferença",
+    "diferenças", "concorrente", "concorrentes", "resumo", "gostaria",
+    "existe", "existem", "tem", "são", "está", "estão", "hoje", "atual",
+    "atualmente", "with", "that", "this", "what", "which", "about", "have",
+])
+
+function extractKeywords(query: string): string[] {
+    return query
+        .split(/[^a-zA-ZÀ-ÿ0-9]+/)
+        .map((w) => norm(w))
+        .filter((w) => w.length >= 4 && !STOPWORDS.has(w))
+}
+
+export function buildOsintContext(query: string, maxRows = 12): string {
+    const q = norm(query)
+    const keywords = extractKeywords(query)
+
+    // tenta achar um MODELO especifico citado na pergunta (ex.: "BYD Dolphin"
+    // ou so "Dolphin") - da mais precisao do que so bater a marca, que hoje
+    // pode ter varios modelos coletados
+    const mentionedVehicles = vehicleSpecs.filter((v) => q.includes(norm(v.model)))
+    const mentionedTargets = TARGETS.filter((t) => q.includes(norm(t.target)))
+
+    const relevantVehicles =
+        mentionedVehicles.length > 0
+            ? mentionedVehicles
+            : mentionedTargets.flatMap((t) => getModelsForTarget(t.target))
+
+    const rows =
+        relevantVehicles.length > 0
+            ? relevantVehicles.flatMap((v) => getDiscoveries({ target: v.target, model: v.model, keywords }).slice(0, maxRows))
+            : getDiscoveries({ keywords }).slice(0, maxRows)
+
+    const specLines = relevantVehicles.map(
+        (v) =>
+            `${v.target} ${v.model} (specs): bateria ${v.battery_kwh ?? "?"}kWh, potência ${v.power_cv ?? "?"}cv, ` +
+            `torque ${v.torque_kgfm ?? "?"}kgfm, autonomia ${v.autonomy_km ?? "?"}km, 0-100 ${v.acceleration_0_100 ?? "?"}s, ` +
+            `vel. máx ${v.top_speed_kmh ?? "?"}km/h, peso ${v.weight_kg ?? "?"}kg`
+    )
+
+    const discoveryLines = rows.map((r) => `[${r.target} ${r.model} · ${r.source}] ${r.field}: ${r.value}`)
+
+    const context = [...specLines, ...discoveryLines].join("\n")
+    return context || "(nenhum dado relevante encontrado no dataset OSINT para essa pergunta)"
 }

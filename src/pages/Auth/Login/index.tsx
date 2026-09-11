@@ -2,14 +2,35 @@ import {
     ShieldCheck,
     ArrowRight,
     Eye,
-    EyeOff
+    EyeOff,
+    AlertCircle,
 } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import Button from "../../../components/public/Button"
+import { useAuth } from "../../../context/AuthContext"
 
 function Login() {
     const [showPassword, setShowPassword] = useState(false)
+    const [employeeId, setEmployeeId] = useState("")
+    const [password, setPassword] = useState("")
+    const [error, setError] = useState("")
+
+    const { login } = useAuth()
+    const navigate = useNavigate()
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+
+        const result = login(employeeId, password)
+        if (!result.ok) {
+            setError(result.error)
+            return
+        }
+
+        navigate("/dashboard")
+    }
+
     return (
         <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center px-6 py-24">
 
@@ -44,7 +65,14 @@ function Login() {
                 {/* Card */}
                 <div className="rounded-3xl border border-white/10 bg-white/3 backdrop-blur-xl p-8 shadow-2xl">
 
-                    <form className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+
+                        {error && (
+                            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                {error}
+                            </div>
+                        )}
 
                         {/* Registro */}
                         <div>
@@ -54,6 +82,8 @@ function Login() {
 
                             <input
                                 type="text"
+                                value={employeeId}
+                                onChange={(e) => setEmployeeId(e.target.value)}
                                 placeholder="FRD-000124"
                                 className="w-full h-12 px-4 rounded-xl bg-black/40 border border-white/10 text-white placeholder:text-white/25 outline-none focus:border-blue-500 transition-colors"
                             />
@@ -69,6 +99,8 @@ function Login() {
 
                                 <input
                                     type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••••"
                                     autoComplete="current-password"
                                     onCopy={(e) => e.preventDefault()}

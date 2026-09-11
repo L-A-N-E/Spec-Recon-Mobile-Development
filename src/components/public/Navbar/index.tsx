@@ -6,10 +6,10 @@ import {
     ShieldCheck,
 } from "lucide-react"
 import PictureProfile from "../../private/PictureProfile/index"
+import { useAuth } from "../../../context/AuthContext"
 
 function Navbar() {
-    // futuramente vem do auth context/supabase
-    const isAuthenticated = true
+    const { isAuthenticated } = useAuth()
 
     const [mobileOpen, setMobileOpen] = useState(false)
 

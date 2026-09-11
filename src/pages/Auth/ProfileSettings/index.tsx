@@ -4,19 +4,23 @@ import {
     Briefcase,
     Lock,
     Save,
+    LogOut,
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import PictureProfile from "../../../components/private/PictureProfile/index"
+import { useAuth } from "../../../context/AuthContext"
 
 function ProfileSettings() {
 
-    // mock user
-    const user = {
-        fullName: "Nicolas Haubricht",
-        email: "nicolas.haubricht@ford.com",
-        phone: "+55 (11) 99999-9999",
-        role: "Estagiário · Ford BR",
-        employeeId: "FDBR-28491",
+    const { user, logout } = useAuth()
+    const navigate = useNavigate()
+
+    if (!user) return null // pagina so e acessada dentro de rota protegida
+
+    function handleLogout() {
+        logout()
+        navigate("/login")
     }
 
     return (
@@ -96,7 +100,7 @@ function ProfileSettings() {
                             text-white/45
                             mt-1
                         ">
-                            {user.role}
+                            {user.role} · {user.company}
                         </p>
 
                         <div className="
@@ -169,8 +173,35 @@ function ProfileSettings() {
                     border-t
                     border-white/10
                     flex
-                    justify-end
+                    items-center
+                    justify-between
+                    gap-4
                 ">
+
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            border
+                            border-red-500/20
+                            bg-red-500/10
+                            hover:bg-red-500/15
+                            text-red-400
+                            font-medium
+                            flex
+                            items-center
+                            gap-2
+                            transition-all
+                            duration-300
+                            cursor-pointer
+                        "
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sair da conta
+                    </button>
 
                     <button
                         className="

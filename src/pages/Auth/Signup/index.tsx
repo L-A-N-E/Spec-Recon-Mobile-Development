@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
     ShieldPlus,
     ArrowRight,
@@ -9,8 +9,11 @@ import {
     X
 } from "lucide-react"
 import Button from "../../../components/public/Button"
+import { useAuth } from "../../../context/AuthContext"
 
 function Signup() {
+    const { signup } = useAuth()
+    const navigate = useNavigate()
 
     const [formData, setFormData] = useState({
         employeeId: "",
@@ -138,9 +141,16 @@ function Signup() {
 
         if (!validateForm()) return
 
-        console.log("Cadastro válido:", formData)
+        signup({
+            employeeId: formData.employeeId,
+            fullName: formData.fullName,
+            role: formData.role,
+            department: formData.department,
+            email: formData.email,
+            phone: formData.phone,
+        })
 
-        // futura integração com API/Banco
+        navigate("/dashboard")
     }
 
     return (

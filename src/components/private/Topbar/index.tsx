@@ -18,6 +18,9 @@ import PictureProfile from "../PictureProfile"
 
 import NotificationModal from "../NotificationModal"
 
+import { useAuth } from "../../../context/AuthContext"
+import { useAlerts } from "../../../lib/alerts"
+
 
 
 const navItems = [
@@ -51,13 +54,11 @@ function TopBar() {
     const location = useLocation()
     const [mobileOpen, setMobileOpen] = useState(false)
 
-    // MOCK USER
-    // futuramente virá da API/Auth Context
-    const user = {
-        fullName: "Nicolas Haubricht",
-        role: "Estagiário",
-        company: "Ford BR",
-    }
+    const { user } = useAuth()
+    const { alerts, dismiss, dismissAll } = useAlerts()
+    const hasCritical = alerts.some((a) => a.severity === "critical")
+
+    if (!user) return null // TopBar so renderiza dentro de rota protegida - sempre tem user
 
     return (
         <>
@@ -147,7 +148,26 @@ function TopBar() {
                         >
                             <Bell className="w-4 h-4 text-white/70" />
 
-                            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500" />
+                            {alerts.length > 0 && (
+                                <span className={`
+                                    absolute
+                                    top-1.5
+                                    right-1.5
+                                    min-w-[16px]
+                                    h-4
+                                    px-1
+                                    rounded-full
+                                    flex
+                                    items-center
+                                    justify-center
+                                    text-[10px]
+                                    font-semibold
+                                    text-white
+                                    ${hasCritical ? "bg-red-500" : "bg-blue-500"}
+                                `}>
+                                    {alerts.length}
+                                </span>
+                            )}
                         </button>
                         
 
@@ -230,6 +250,9 @@ function TopBar() {
             <NotificationModal
                 open={notificationOpen}
                 onClose={() => setNotificationOpen(false)}
+                alerts={alerts}
+                onDismiss={dismiss}
+                onDismissAll={dismissAll}
             />
         </>
     )

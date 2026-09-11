@@ -22,19 +22,45 @@ import {
     TARGETS,
     TIME_WINDOWS,
     getDiscoveries,
+    getYearBounds,
     parseKeywords,
     type OsintDiscoveryScored,
     type TimeWindowId,
 } from "../../lib/osint"
 
 const CATEGORY_OPTIONS = ["Todas", ...CATEGORIES]
+const MARCA_TODAS = "Todas as marcas"
+const YEAR_BOUNDS = getYearBounds()
+
+type SearchState = {
+    target: string
+    model: string
+    yearFrom: string
+    yearTo: string
+    category: string
+    keywords: string
+    timeWindow: TimeWindowId
+}
+
+const DEFAULT_SEARCH: SearchState = {
+    target: MARCA_TODAS,
+    model: "",
+    yearFrom: "",
+    yearTo: "",
+    category: "Todas",
+    keywords: "",
+    timeWindow: "30d",
+}
 
 function RadarPage() {
 
-    const [target, setTarget] = useState(TARGETS[0].target)
-    const [category, setCategory] = useState("Todas")
-    const [keywords, setKeywords] = useState("estado sólido, 800V, fluxo axial")
-    const [timeWindow, setTimeWindow] = useState<TimeWindowId>("30d")
+    const [target, setTarget] = useState(DEFAULT_SEARCH.target)
+    const [model, setModel] = useState(DEFAULT_SEARCH.model)
+    const [yearFrom, setYearFrom] = useState(DEFAULT_SEARCH.yearFrom)
+    const [yearTo, setYearTo] = useState(DEFAULT_SEARCH.yearTo)
+    const [category, setCategory] = useState(DEFAULT_SEARCH.category)
+    const [keywords, setKeywords] = useState(DEFAULT_SEARCH.keywords)
+    const [timeWindow, setTimeWindow] = useState<TimeWindowId>(DEFAULT_SEARCH.timeWindow)
 
     const [scanning, setScanning] = useState(false)
 
@@ -46,12 +72,12 @@ function RadarPage() {
     )
 
     const [discoveries, setDiscoveries] = useState<OsintDiscoveryScored[]>(() =>
-        runQuery(TARGETS[0].target, "Todas", "estado sólido, 800V, fluxo axial", "30d", OSINT_SOURCES.filter((s) => s.live).map((s) => s.label))
+        runQuery(DEFAULT_SEARCH, OSINT_SOURCES.filter((s) => s.live).map((s) => s.label))
     )
 
     function runQueryFromState() {
         const enabledSourceLabels = sources.filter((s) => s.enabled).map((s) => s.label)
-        return runQuery(target, category, keywords, timeWindow, enabledSourceLabels)
+        return runQuery({ target, model, yearFrom, yearTo, category, keywords, timeWindow }, enabledSourceLabels)
     }
 
     function toggleSource(id: string) {
@@ -141,18 +167,102 @@ function RadarPage() {
                                         transition-colors
                                     "
                                 >
+                                    <option value={MARCA_TODAS}>{MARCA_TODAS}</option>
+
                                     {TARGETS.map((t) => (
                                         <option key={t.target} value={t.target}>
                                             {t.target}
                                         </option>
                                     ))}
                                 </select>
+                            </div>
 
-                                {targetModel && (
-                                    <div className="mt-2 text-xs text-white/30">
-                                        Modelo de referência: {targetModel}
-                                    </div>
-                                )}
+                            {/* Modelo */}
+                            <div>
+                                <label className="block text-xs uppercase tracking-[0.2em] text-white/35 mb-2">
+                                    Modelo
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={model}
+                                    onChange={(e) => setModel(e.target.value)}
+                                    placeholder={targetModel ? `ex.: ${targetModel}` : "nome do modelo (opcional)"}
+                                    className="
+                                        w-full
+                                        h-12
+                                        px-4
+                                        rounded-xl
+                                        bg-black/40
+                                        border
+                                        border-white/10
+                                        text-white
+                                        placeholder:text-white/20
+                                        outline-none
+                                        focus:border-blue-500
+                                        transition-colors
+                                    "
+                                />
+                            </div>
+
+                            {/* Ano */}
+                            <div>
+                                <label className="block text-xs uppercase tracking-[0.2em] text-white/35 mb-2">
+                                    Ano de produção ({YEAR_BOUNDS.min}–{YEAR_BOUNDS.max})
+                                </label>
+
+                                <div className="grid grid-cols-2 gap-3">
+
+                                    <input
+                                        type="number"
+                                        value={yearFrom}
+                                        onChange={(e) => setYearFrom(e.target.value)}
+                                        placeholder={`de (${YEAR_BOUNDS.min})`}
+                                        min={YEAR_BOUNDS.min}
+                                        max={YEAR_BOUNDS.max}
+                                        className="
+                                            w-full
+                                            h-12
+                                            px-4
+                                            rounded-xl
+                                            bg-black/40
+                                            border
+                                            border-white/10
+                                            text-white
+                                            placeholder:text-white/20
+                                            outline-none
+                                            focus:border-blue-500
+                                            transition-colors
+                                        "
+                                    />
+
+                                    <input
+                                        type="number"
+                                        value={yearTo}
+                                        onChange={(e) => setYearTo(e.target.value)}
+                                        placeholder={`até (${YEAR_BOUNDS.max})`}
+                                        min={YEAR_BOUNDS.min}
+                                        max={YEAR_BOUNDS.max}
+                                        className="
+                                            w-full
+                                            h-12
+                                            px-4
+                                            rounded-xl
+                                            bg-black/40
+                                            border
+                                            border-white/10
+                                            text-white
+                                            placeholder:text-white/20
+                                            outline-none
+                                            focus:border-blue-500
+                                            transition-colors
+                                        "
+                                    />
+                                </div>
+
+                                <div className="mt-2 text-xs text-white/30">
+                                    Só entram concorrentes com produção sobrepondo esse intervalo (dado extraído da Wikipedia).
+                                </div>
                             </div>
 
                             {/* Categoria */}
@@ -410,8 +520,8 @@ function RadarPage() {
 
                         <p className="text-xs text-white/35 leading-relaxed">
                             Todas as coletas utilizam apenas fontes públicas
-                            e dados acessíveis legalmente (hoje: Wikipedia e
-                            EV Database).
+                            e dados acessíveis legalmente (hoje: Wikipedia,
+                            EV Database e iCarros).
                         </p>
                     </div>
                 </div>
@@ -475,7 +585,7 @@ function RadarPage() {
                             </h3>
 
                             <p className="mt-2 text-sm text-white/35">
-                                Ajuste os filtros (concorrente, categoria, janela temporal ou fontes) e tente novamente.
+                                Ajuste os filtros (marca, modelo, ano, categoria, janela temporal ou fontes) e tente novamente.
                             </p>
                         </div>
 
@@ -624,25 +734,25 @@ function RadarPage() {
             {/* Footer */}
             <div className="mt-8 flex items-center justify-center gap-2 text-xs text-white/25">
                 <Clock className="w-3.5 h-3.5" />
-                Dados coletados via osint-radar (Python) · Wikipedia + EV Database
+                Dados coletados via osint-radar (Python) · Wikipedia + EV Database + iCarros
             </div>
         </div>
     )
 }
 
-function runQuery(
-    target: string,
-    category: string,
-    keywordsInput: string,
-    timeWindow: TimeWindowId,
-    enabledSourceLabels: string[]
-) {
-    const windowDays = TIME_WINDOWS.find((w) => w.id === timeWindow)?.days ?? 30
+function runQuery(search: SearchState, enabledSourceLabels: string[]) {
+    const windowDays = TIME_WINDOWS.find((w) => w.id === search.timeWindow)?.days ?? 30
+
+    const yearFrom = search.yearFrom.trim() ? Number(search.yearFrom) : undefined
+    const yearTo = search.yearTo.trim() ? Number(search.yearTo) : undefined
 
     return getDiscoveries({
-        target,
-        category: category === "Todas" ? undefined : category,
-        keywords: parseKeywords(keywordsInput),
+        target: search.target === MARCA_TODAS ? undefined : search.target,
+        model: search.model.trim() || undefined,
+        yearFrom: yearFrom != null && !Number.isNaN(yearFrom) ? yearFrom : undefined,
+        yearTo: yearTo != null && !Number.isNaN(yearTo) ? yearTo : undefined,
+        category: search.category === "Todas" ? undefined : search.category,
+        keywords: parseKeywords(search.keywords),
         windowDays,
         enabledSources: enabledSourceLabels,
     })

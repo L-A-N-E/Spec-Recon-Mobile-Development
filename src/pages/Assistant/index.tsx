@@ -8,23 +8,30 @@ import {
     ShieldCheck,
 } from "lucide-react"
 
+import { buildOsintContext } from "../../lib/osint"
+
 type MessageType = {
     role: "user" | "assistant"
     content: string
 }
 
+// Modelo rodando localmente via Ollama (gratuito, sem API key - so funciona
+// com `ollama serve` ativo na maquina de quem esta usando a pagina).
+const OLLAMA_URL = "http://localhost:11434/api/chat"
+const OLLAMA_MODEL = "llama3.2"
+
 const suggestions = [
-    "Diferenças entre Mustang Mach-E e Tesla Model Y",
-    "Resumo sobre baterias de estado sólido",
-    "Concorrentes usando arquitetura 800V",
-    "Comparativo F-150 Lightning vs Cybertruck",
+    "Qual a autonomia da BYD Seal?",
+    "Quais concorrentes usam arquitetura 800V?",
+    "Compare a potência do Tesla Model 3 e do Kia EV6",
+    "O que sabemos sobre carregamento da Hyundai Ioniq 5?",
 ]
 
 const initialMessages: MessageType[] = [
     {
         role: "assistant",
         content:
-            "Olá. Sou o Sentinel, assistente estratégico da Ford. Posso cruzar descobertas OSINT, tendências técnicas, concorrentes e insights automotivos em tempo real.",
+            "Olá. Sou o Sentinel, assistente estratégico da Ford. Respondo com base nos dados reais coletados pelo Radar (Wikipedia + EV Database) sobre Tesla, BYD, Toyota, GM, Rivian, Hyundai, Kia e Volkswagen. Rodando localmente via Ollama.",
     },
 ]
 
@@ -48,76 +55,44 @@ function Assistant() {
 
     }, [messages, thinking])
 
-    function generateResponse(text: string) {
+    async function generateResponse(text: string, history: MessageType[]) {
 
-        const query = text.toLowerCase()
+        const context = buildOsintContext(text)
 
-        if (
-            query.includes("800v")
-            || query.includes("arquitetura")
-        ) {
-            return `
-Arquitetura 800V identificada em múltiplos concorrentes.
+        const systemPrompt = `Você é o Sentinel, assistente de inteligência competitiva da plataforma Spec Recon (Ford). Responda sempre em português, de forma direta e objetiva.
 
-• Hyundai / Kia → Plataforma E-GMP  
-• Porsche → Taycan  
-• Lucid → Lucid Air  
-• Tesla → Cybertruck  
+Use SOMENTE os dados de contexto abaixo (coletados via OSINT: Wikipedia + EV Database) para responder sobre especificações técnicas e concorrentes. Se o contexto não tiver a informação pedida, diga claramente que não encontrou esse dado na coleta atual - não invente números.
 
-Benefícios principais:
-- Recarga ultrarrápida
-- Menor aquecimento
-- Maior eficiência energética
-- Melhor performance sustentada
-            `
+Contexto coletado:
+${context}`
+
+        const ollamaMessages = [
+            { role: "system", content: systemPrompt },
+            ...history.slice(1).map((m) => ({ role: m.role, content: m.content })),
+            { role: "user", content: text },
+        ]
+
+        const response = await fetch(OLLAMA_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: OLLAMA_MODEL,
+                messages: ollamaMessages,
+                stream: false,
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`Ollama respondeu ${response.status}`)
         }
 
-        if (
-            query.includes("bateria")
-            || query.includes("estado sólido")
-        ) {
-            return `
-Últimas descobertas sobre baterias de estado sólido:
+        const data = await response.json()
 
-• Toyota acelerando produção piloto  
-• QuantumScape atingiu novos ciclos de carga  
-• Samsung SDI avançando em densidade energética  
-
-Impacto estimado:
-+ autonomia
-+ menor degradação
-+ recarga mais rápida
-            `
-        }
-
-        if (
-            query.includes("mach")
-            || query.includes("model y")
-        ) {
-            return `
-Comparativo aerodinâmico:
-
-Tesla Model Y:
-• Cd ~0.23
-
-Mustang Mach-E:
-• Cd ~0.29
-
-Possíveis melhorias para Ford:
-- Active grille shutters
-- Revisão de difusor
-- Rodas aero
-            `
-        }
-
-        return `
-Analisando sua solicitação...
-
-A integração com IA em tempo real ainda está em desenvolvimento nesta demonstração do Spec Recon.
-        `
+        return (data.message?.content as string | undefined)?.trim()
+            || "Não consegui gerar uma resposta a partir do modelo local."
     }
 
-    function sendMessage(text?: string) {
+    async function sendMessage(text?: string) {
 
         const content = text || input
 
@@ -128,6 +103,8 @@ A integração com IA em tempo real ainda está em desenvolvimento nesta demonst
             content,
         }
 
+        const history = messages
+
         setMessages((prev) => [
             ...prev,
             userMessage,
@@ -136,21 +113,29 @@ A integração com IA em tempo real ainda está em desenvolvimento nesta demonst
         setInput("")
         setThinking(true)
 
-        setTimeout(() => {
+        try {
 
-            const assistantMessage: MessageType = {
-                role: "assistant",
-                content: generateResponse(content),
-            }
+            const reply = await generateResponse(content, history)
 
             setMessages((prev) => [
                 ...prev,
-                assistantMessage,
+                { role: "assistant", content: reply },
             ])
 
-            setThinking(false)
+        } catch {
 
-        }, 1200)
+            setMessages((prev) => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content:
+                        "Não consegui falar com o modelo local (Ollama). Confirme que ele está rodando (`ollama serve` ou `brew services start ollama`) e que o modelo foi baixado (`ollama pull llama3.2`).",
+                },
+            ])
+
+        } finally {
+            setThinking(false)
+        }
     }
 
     return (

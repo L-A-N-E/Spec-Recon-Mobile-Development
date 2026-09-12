@@ -575,11 +575,10 @@ Nenhuma fonte vira confiável automaticamente só por aparecer em uma busca ou e
 * [x] Web scraping automatizado (pipeline OSINT em Python, 11 fontes, ficha técnica + vendas);
 * [x] Integração com IA generativa (Henry, via Ollama local);
 * [x] Sistema de notificações (Central de Alertas dinâmica);
+* [x] Dashboard analítico completo;
 * [x] Exportação de relatórios (CSV: ranking de vendas, faturamento por marca, vendas regionais);
 * [ ] Integração com banco de dados (hoje os dados são JSON estático gerado pelo pipeline Python);
 * [ ] Integração com APIs oficiais automotivas (hoje via scraping de fontes públicas);
-* [ ] Sistema real de autenticação (backend próprio);
-* [ ] Dashboard analítico completo;
 * [ ] Sistema de permissões (perfis de acesso).
 
 ---

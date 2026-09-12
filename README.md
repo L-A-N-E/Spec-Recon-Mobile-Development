@@ -1,5 +1,6 @@
 <p align="center">
     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Ford_Motor_Company_Logo.svg" align="center" width="30%">
+	<!-- <img width="20%" align="center" alt="logo_spec_recon_branca" src="https://github.com/user-attachments/assets/a45eb9dd-e21a-4dd0-92c9-511a63a8cb93" /> -->
 </p>
 
 <h1 align="center">Spec Recon - Mobile Development</h1>

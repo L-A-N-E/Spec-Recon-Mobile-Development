@@ -1,5 +1,4 @@
 import {
-    ShieldCheck,
     ArrowRight,
     Eye,
     EyeOff,
@@ -9,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import Button from "../../../components/public/Button"
 import { useAuth } from "../../../context/AuthContext"
+import LogoSpecRecon from "../../../assets/logo_spec_recon_branca.png"
 
 function Login() {
     const [showPassword, setShowPassword] = useState(false)
@@ -28,7 +28,7 @@ function Login() {
             return
         }
 
-        navigate("/dashboard")
+        navigate("/radar")
     }
 
     return (
@@ -45,9 +45,11 @@ function Login() {
                 {/* Logo */}
                 <div className="flex flex-col items-center text-center mb-10">
 
-                    <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-5">
-                        <ShieldCheck className="w-8 h-8 text-blue-400" />
-                    </div>
+                    <img
+                        src={LogoSpecRecon}
+                        alt="Spec Recon"
+                        className="w-16 h-16 object-contain mb-5"
+                    />
 
                     <div className="text-xs uppercase tracking-[0.3em] text-blue-400 mb-3">
                         Ford Motor Company

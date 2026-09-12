@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
     Radar,
     Play,
     Filter,
+    ChevronDown,
     ExternalLink,
     Sparkles,
     Calendar,
@@ -20,12 +21,10 @@ import {
     OSINT_SOURCES,
     CATEGORIES,
     TARGETS,
-    TIME_WINDOWS,
     getDiscoveries,
     getYearBounds,
     parseKeywords,
     type OsintDiscoveryScored,
-    type TimeWindowId,
 } from "../../lib/osint"
 
 const CATEGORY_OPTIONS = ["Todas", ...CATEGORIES]
@@ -39,7 +38,6 @@ type SearchState = {
     yearTo: string
     category: string
     keywords: string
-    timeWindow: TimeWindowId
 }
 
 const DEFAULT_SEARCH: SearchState = {
@@ -49,7 +47,6 @@ const DEFAULT_SEARCH: SearchState = {
     yearTo: "",
     category: "Todas",
     keywords: "",
-    timeWindow: "30d",
 }
 
 function RadarPage() {
@@ -60,36 +57,64 @@ function RadarPage() {
     const [yearTo, setYearTo] = useState(DEFAULT_SEARCH.yearTo)
     const [category, setCategory] = useState(DEFAULT_SEARCH.category)
     const [keywords, setKeywords] = useState(DEFAULT_SEARCH.keywords)
-    const [timeWindow, setTimeWindow] = useState<TimeWindowId>(DEFAULT_SEARCH.timeWindow)
 
     const [scanning, setScanning] = useState(false)
 
     const [sources, setSources] = useState(
         OSINT_SOURCES.map((source) => ({
             ...source,
-            enabled: source.live, // os 2 que ja estao implementados vem marcados
+            enabled: true, // todas as fontes disponiveis pra busca, todas marcadas por padrao
         }))
     )
 
+    const [sourcesMenuOpen, setSourcesMenuOpen] = useState(false)
+    const sourcesMenuRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (sourcesMenuRef.current && !sourcesMenuRef.current.contains(e.target as Node)) {
+                setSourcesMenuOpen(false)
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
+
     const [discoveries, setDiscoveries] = useState<OsintDiscoveryScored[]>(() =>
-        runQuery(DEFAULT_SEARCH, OSINT_SOURCES.filter((s) => s.live).map((s) => s.label))
+        runQuery(DEFAULT_SEARCH, OSINT_SOURCES.map((s) => s.label))
     )
 
     function runQueryFromState() {
         const enabledSourceLabels = sources.filter((s) => s.enabled).map((s) => s.label)
-        return runQuery({ target, model, yearFrom, yearTo, category, keywords, timeWindow }, enabledSourceLabels)
+        return runQuery({ target, model, yearFrom, yearTo, category, keywords }, enabledSourceLabels)
     }
 
     function toggleSource(id: string) {
 
         setSources((prev) =>
             prev.map((source) =>
-                source.id === id && source.live
+                source.id === id
                     ? { ...source, enabled: !source.enabled }
                     : source
             )
         )
     }
+
+    const enabledSourceCount = sources.filter((s) => s.enabled).length
+    const allSourcesSelected = enabledSourceCount === sources.length
+
+    function toggleAllSources() {
+        const nextEnabled = !allSourcesSelected
+        setSources((prev) => prev.map((source) => ({ ...source, enabled: nextEnabled })))
+    }
+
+    const sourcesMenuLabel =
+        enabledSourceCount === 0
+            ? "Nenhuma fonte selecionada"
+            : allSourcesSelected
+                ? "Todas as fontes"
+                : `${enabledSourceCount} de ${sources.length} fontes`
 
     async function handleScan() {
 
@@ -329,47 +354,11 @@ function RadarPage() {
                                     />
                                 </div>
                             </div>
-
-                            {/* Time */}
-                            <div>
-
-                                <label className="block text-xs uppercase tracking-[0.2em] text-white/35 mb-3">
-                                    Janela temporal
-                                </label>
-
-                                <div className="grid grid-cols-3 gap-2">
-
-                                    {TIME_WINDOWS.map((item) => (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => setTimeWindow(item.id)}
-                                            className={`
-                                                h-11
-                                                rounded-xl
-                                                border
-                                                text-sm
-                                                font-medium
-                                                transition-all
-                                                duration-300
-                                                cursor-pointer
-
-                                                ${item.id === timeWindow
-                                                    ? "bg-blue-500 border-blue-500 text-white"
-                                                    : "border-white/10 text-white/60 hover:bg-white/5"
-                                                }
-                                            `}
-                                        >
-                                            {item.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     {/* Fontes */}
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden">
+                    <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-visible">
 
                         <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
 
@@ -380,106 +369,205 @@ function RadarPage() {
                             </h2>
                         </div>
 
-                        <div className="p-4 space-y-2">
+                        <div className="p-4">
 
-                            {sources.map((source) => (
+                            <div ref={sourcesMenuRef} className="relative">
 
                                 <button
-                                    key={source.id}
                                     type="button"
-                                    onClick={() => toggleSource(source.id)}
-                                    disabled={!source.live}
-                                    className={`
+                                    onClick={() => setSourcesMenuOpen((prev) => !prev)}
+                                    className="
                                         w-full
-                                        flex
-                                        items-start
-                                        gap-3
-                                        p-4
-                                        rounded-2xl
+                                        h-12
+                                        px-4
+                                        rounded-xl
+                                        bg-black/40
                                         border
-                                        transition-all
-                                        duration-300
-
-                                        ${!source.live
-                                            ? "opacity-40 cursor-not-allowed border-white/5"
-                                            : "cursor-pointer"
-                                        }
-
-                                        ${source.enabled && source.live
-                                            ? "bg-blue-500/10 border-blue-500/20"
-                                            : source.live
-                                                ? "border-white/5 hover:bg-white/4"
-                                                : ""
-                                        }
-                                    `}
-                                >
-
-                                    <div className={`
-                                        mt-0.5
-                                        w-5
-                                        h-5
-                                        shrink-0
-                                        rounded-md
-                                        border
+                                        border-white/10
+                                        text-white
+                                        text-sm
+                                        outline-none
+                                        focus:border-blue-500
+                                        transition-colors
+                                        cursor-pointer
                                         flex
                                         items-center
-                                        justify-center
+                                        justify-between
+                                        gap-3
+                                    "
+                                >
+                                    <span className={enabledSourceCount === 0 ? "text-white/35" : "text-white/85"}>
+                                        {sourcesMenuLabel}
+                                    </span>
 
-                                        ${source.enabled && source.live
-                                            ? "bg-blue-500 border-blue-500"
-                                            : "border-white/15"
-                                        }
-                                    `}>
-                                        {source.enabled && source.live && (
-                                            <Check className="w-3 h-3 text-white" />
-                                        )}
-                                    </div>
+                                    <ChevronDown
+                                        className={`w-4 h-4 text-white/40 shrink-0 transition-transform duration-200 ${
+                                            sourcesMenuOpen ? "rotate-180" : ""
+                                        }`}
+                                    />
+                                </button>
 
-                                    <div className="flex-1 text-left">
+                                {sourcesMenuOpen && (
 
-                                        <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="
+                                        absolute
+                                        z-20
+                                        left-0
+                                        right-0
+                                        mt-2
+                                        rounded-2xl
+                                        border
+                                        border-white/10
+                                        bg-black/95
+                                        backdrop-blur-xl
+                                        shadow-2xl
+                                        overflow-hidden
+                                    ">
 
-                                            <span className="text-sm text-white/75">
-                                                {source.label}
-                                            </span>
+                                        {/* Selecionar todas */}
+                                        <button
+                                            type="button"
+                                            onClick={toggleAllSources}
+                                            className="
+                                                w-full
+                                                flex
+                                                items-center
+                                                gap-3
+                                                px-4
+                                                py-3
+                                                border-b
+                                                border-white/10
+                                                bg-white/[0.03]
+                                                hover:bg-white/[0.06]
+                                                transition-colors
+                                                duration-200
+                                                cursor-pointer
+                                            "
+                                        >
+                                            <div className={`
+                                                w-5
+                                                h-5
+                                                shrink-0
+                                                rounded-md
+                                                border
+                                                flex
+                                                items-center
+                                                justify-center
 
-                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
-                                                {source.classification}
-                                            </span>
-
-                                            {source.live ? (
-                                                <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[10px] uppercase tracking-wider text-green-400">
-                                                    Ativo
-                                                </span>
-                                            ) : (
-                                                <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] uppercase tracking-wider text-white/30">
-                                                    Em breve
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-1 flex items-center gap-2">
-
-                                            <div className="flex items-center gap-0.5">
-                                                {Array.from({ length: 5 }).map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={`w-3 h-3 ${
-                                                            i < source.reliability
-                                                                ? "text-blue-400 fill-blue-400"
-                                                                : "text-white/15"
-                                                        }`}
-                                                    />
-                                                ))}
+                                                ${allSourcesSelected
+                                                    ? "bg-blue-500 border-blue-500"
+                                                    : "border-white/15"
+                                                }
+                                            `}>
+                                                {allSourcesSelected && <Check className="w-3 h-3 text-white" />}
                                             </div>
 
-                                            <span className="text-xs text-white/30">
-                                                {source.note}
+                                            <span className="text-sm font-medium text-white/85">
+                                                Selecionar todas as fontes
                                             </span>
+
+                                            <span className="ml-auto text-xs text-white/30">
+                                                {enabledSourceCount}/{sources.length}
+                                            </span>
+                                        </button>
+
+                                        <div className="max-h-80 overflow-y-auto p-2 space-y-1">
+
+                                            {sources.map((source) => (
+
+                                                <button
+                                                    key={source.id}
+                                                    type="button"
+                                                    onClick={() => toggleSource(source.id)}
+                                                    className={`
+                                                        w-full
+                                                        flex
+                                                        items-start
+                                                        gap-3
+                                                        p-3
+                                                        rounded-xl
+                                                        border
+                                                        cursor-pointer
+                                                        transition-all
+                                                        duration-300
+
+                                                        ${source.enabled
+                                                            ? "bg-blue-500/10 border-blue-500/20"
+                                                            : "border-transparent hover:bg-white/4"
+                                                        }
+                                                    `}
+                                                >
+
+                                                    <div className={`
+                                                        mt-0.5
+                                                        w-5
+                                                        h-5
+                                                        shrink-0
+                                                        rounded-md
+                                                        border
+                                                        flex
+                                                        items-center
+                                                        justify-center
+
+                                                        ${source.enabled
+                                                            ? "bg-blue-500 border-blue-500"
+                                                            : "border-white/15"
+                                                        }
+                                                    `}>
+                                                        {source.enabled && (
+                                                            <Check className="w-3 h-3 text-white" />
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex-1 text-left">
+
+                                                        <div className="flex items-center gap-2 flex-wrap">
+
+                                                            <span className="text-sm text-white/75">
+                                                                {source.label}
+                                                            </span>
+
+                                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+                                                                {source.classification}
+                                                            </span>
+
+                                                            {source.live ? (
+                                                                <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[10px] uppercase tracking-wider text-green-400">
+                                                                    Ativo
+                                                                </span>
+                                                            ) : (
+                                                                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[10px] uppercase tracking-wider text-amber-400">
+                                                                    Beta
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="mt-1 flex items-center gap-2">
+
+                                                            <div className="flex items-center gap-0.5">
+                                                                {Array.from({ length: 5 }).map((_, i) => (
+                                                                    <Star
+                                                                        key={i}
+                                                                        className={`w-3 h-3 ${
+                                                                            i < source.reliability
+                                                                                ? "text-blue-400 fill-blue-400"
+                                                                                : "text-white/15"
+                                                                        }`}
+                                                                    />
+                                                                ))}
+                                                            </div>
+
+                                                            <span className="text-xs text-white/30">
+                                                                {source.note}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
-                                </button>
-                            ))}
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -521,7 +609,9 @@ function RadarPage() {
                         <p className="text-xs text-white/35 leading-relaxed">
                             Todas as coletas utilizam apenas fontes públicas
                             e dados acessíveis legalmente (hoje: Wikipedia,
-                            EV Database e iCarros).
+                            EV Database e iCarros — 11 fontes adicionais em
+                            validação, incluindo grandes veículos de
+                            comunicação como G1, R7 e Band).
                         </p>
                     </div>
                 </div>
@@ -734,15 +824,13 @@ function RadarPage() {
             {/* Footer */}
             <div className="mt-8 flex items-center justify-center gap-2 text-xs text-white/25">
                 <Clock className="w-3.5 h-3.5" />
-                Dados coletados via osint-radar (Python) · Wikipedia + EV Database + iCarros
+                Dados coletados via osint-radar (Python) · Wikipedia + EV Database + iCarros + 11 fontes em validação
             </div>
         </div>
     )
 }
 
 function runQuery(search: SearchState, enabledSourceLabels: string[]) {
-    const windowDays = TIME_WINDOWS.find((w) => w.id === search.timeWindow)?.days ?? 30
-
     const yearFrom = search.yearFrom.trim() ? Number(search.yearFrom) : undefined
     const yearTo = search.yearTo.trim() ? Number(search.yearTo) : undefined
 
@@ -753,7 +841,6 @@ function runQuery(search: SearchState, enabledSourceLabels: string[]) {
         yearTo: yearTo != null && !Number.isNaN(yearTo) ? yearTo : undefined,
         category: search.category === "Todas" ? undefined : search.category,
         keywords: parseKeywords(search.keywords),
-        windowDays,
         enabledSources: enabledSourceLabels,
     })
 }

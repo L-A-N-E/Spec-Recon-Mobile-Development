@@ -9,7 +9,8 @@ O que faz:
      campos da tela Radar (Concorrente / Categoria tecnica / Palavras-chave).
   2. Localiza uma pagina relevante em cada fonte publica configurada
      (Wikipedia, EV Database e um grupo de sites .br - iCarros, Webmotors,
-     Quatro Rodas, UOL Carros, Autoesporte) usando busca por texto.
+     Quatro Rodas, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb,
+     FlatOut, Best Cars, AutoPapo, G1, R7, Band) usando busca por texto.
   3. Faz o parse das especificacoes tecnicas publicadas (tabelas/infobox).
   4. Categoriza cada especificacao (Bateria, Powertrain, Software,
      Aerodinamica, Materiais...) e marca se bate com as palavras-chave.
@@ -21,18 +22,30 @@ IMPORTANTE - escopo desta PoC:
     (sem checagem de robots.txt, sem rate limiting, sem rotacao de
     proxy/anti-bot, tratamento de erro minimo). Nao usar em producao
     como esta.
-  - Os sites .br (iCarros, Webmotors, Quatro Rodas, UOL Carros,
-    Autoesporte) foram cadastrados SEM validacao de rede ao vivo (este
-    ambiente de dev nao tinha acesso externo na hora de escrever o
-    codigo). O parse usa `parse_br_generic_specs()`, que tenta varias
-    estruturas genericas (tabela th/td, tabela 2-colunas, dl/dt/dd,
-    "Label: Valor" solto) em vez de seletor CSS fixo por site - mais
-    resiliente a redesign, mas precisa ser CONFERIDO na primeira rodada:
-    olhe a contagem de campos por fonte no output do build_dataset.py.
-    Fonte com 0 (ou quase 0) campos consistentemente = ou o locate_*
-    nao esta achando a pagina certa, ou o layout precisa de um parser
-    dedicado. Webmotors em especial costuma ter protecao anti-bot mais
-    agressiva - pode falhar sistematicamente mesmo com locate correto.
+  - Os sites .br (UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb,
+    FlatOut, Best Cars, AutoPapo) foram cadastrados SEM validacao de rede
+    ao vivo completa (checagem feita em 2026-09-11 confirmou que o dominio
+    responde e que o DuckDuckGo tem paginas indexadas desses sites, mas
+    NAO foi possivel confirmar o parser campo a campo nessa mesma sessao
+    porque o DuckDuckGo bloqueou com CAPTCHA depois de poucas chamadas -
+    ver aviso em `duckduckgo_search`). O parse usa
+    `parse_br_generic_specs()`, que tenta varias estruturas genericas
+    (tabela th/td, tabela 2-colunas, dl/dt/dd, "Label: Valor" solto) em
+    vez de seletor CSS fixo por site - mais resiliente a redesign, mas
+    precisa ser CONFERIDO na primeira rodada: olhe a contagem de campos
+    por fonte no output do build_dataset.py. Fonte com 0 (ou quase 0)
+    campos consistentemente = ou o locate_* nao esta achando a pagina
+    certa, ou o layout precisa de um parser dedicado.
+  - Webmotors: CONFIRMADO bloqueio anti-bot ao vivo (a pagina responde
+    200 mas com o corpo "Access to this page has been denied", sem
+    conteudo) - fica registrado por completude, mas nao espere campos
+    dele sem headless browser + rotacao de IP (fora do escopo desta PoC).
+  - Quatro Rodas (quatrorodas.abril.com.br): tinha sido removido de SOURCES
+    em 2026-09-11 apos concluir (so pela HOME do site) que virou revista
+    fechada (Abril Signature). CORRIGIDO em 2026-09-12: a home e' fechada
+    mesmo, mas materias especificas (ex.: recapitulacoes mensais de vendas
+    Fenabrave) continuam publicas e com tabela raspavel - a home nao e'
+    representativa do site inteiro. RE-REGISTRADO abaixo.
   - Para adicionar mais sites, basta incluir uma nova entrada na lista
     SOURCES no final do arquivo (uma funcao `locate_*` que acha a URL e
     uma funcao `parse_*` que extrai um dict {campo: valor}).
@@ -66,7 +79,7 @@ from bs4 import BeautifulSoup
 # Config
 # --------------------------------------------------------------------------
 
-MAX_SOURCES = 7  # Wikipedia + EV Database + 5 sites .br (ver SOURCES no final)
+MAX_SOURCES = 15  # Wikipedia + EV Database + 13 sites .br (ver SOURCES no final)
 
 HEADERS = {
     "User-Agent": (
@@ -120,6 +133,21 @@ def fetch_html(url: str, retries: int = 1) -> str | None:
 
 _DDG_BLOCK_MARKERS = ("bots use duckduckgo too", "select all squares")
 
+# Circuit breaker: depois de algumas falhas SEGUIDAS (timeout de rede ou
+# CAPTCHA), assume que o DuckDuckGo esta inacessivel dessa rede pro resto
+# do processo e para de tentar - sem isso, um catalogo de 239 veiculos x 9
+# fontes .br vira ~9 tentativas x ate 30s (timeout+retry) POR VEICULO
+# mesmo sabendo que vai falhar, o que transforma um run de minutos em um
+# run de horas sem nenhum dado novo. Confirmado na pratica em 2026-09-11:
+# rede de sandbox/datacenter levou o DDG de "CAPTCHA ocasional" pra
+# "timeout de conexao" (nem chega a responder) depois de algumas dezenas
+# de chamadas na mesma sessao. Isso e por-processo (reseta a cada run) -
+# se rodar de novo depois, ou de outra rede, tenta normalmente nas
+# primeiras chamadas.
+_DDG_FAILURE_THRESHOLD = 3
+_ddg_consecutive_failures = 0
+_ddg_disabled = False
+
 
 def duckduckgo_search(query: str, site: str | None = None, max_results: int = 8) -> list[str]:
     """Busca simples via DuckDuckGo HTML (sem API key) e retorna as URLs
@@ -140,7 +168,15 @@ def duckduckgo_search(query: str, site: str | None = None, max_results: int = 8)
     anti-bot de terceiro) - se isso disparar toda hora num run grande,
     a saida e espacar mais as chamadas, rodar em lotes menores, ou trocar
     a estrategia de localizacao (busca propria do site / outro buscador)
-    para as fontes mais afetadas."""
+    para as fontes mais afetadas. Ver `_DDG_FAILURE_THRESHOLD` acima: depois
+    de poucas falhas seguidas (timeout OU captcha) o circuito abre e para
+    de tentar pro resto do processo, pra nao desperdicar horas repetindo
+    uma chamada que ja sabemos que vai falhar."""
+    global _ddg_consecutive_failures, _ddg_disabled
+
+    if _ddg_disabled:
+        return []
+
     q = f"site:{site} {query}" if site else query
     url = f"https://html.duckduckgo.com/html/?q={quote(q)}"
 
@@ -148,14 +184,32 @@ def duckduckgo_search(query: str, site: str | None = None, max_results: int = 8)
     if html and "No results" not in html and len(html) < 5000:
         time.sleep(3)
         html = fetch_html(url)  # resposta suspeita de rate limit, tenta de novo
+
+    def _register_failure(reason: str) -> None:
+        global _ddg_consecutive_failures, _ddg_disabled
+        _ddg_consecutive_failures += 1
+        if _ddg_consecutive_failures >= _DDG_FAILURE_THRESHOLD and not _ddg_disabled:
+            _ddg_disabled = True
+            print(
+                f"  [!] DuckDuckGo: {_ddg_consecutive_failures} falhas seguidas "
+                f"({reason}) - assumindo que esta inacessivel nesta rede e "
+                "PARANDO de tentar fontes via DDG pro resto desta rodada "
+                "(as fontes Wikipedia/EV Database continuam normalmente). "
+                "Rode de novo depois, ou de outra rede, pra completar essas fontes."
+            )
+
     if not html:
+        _register_failure("timeout/erro de rede")
         return []
 
     if any(marker in html.lower() for marker in _DDG_BLOCK_MARKERS):
         print("  [!] DuckDuckGo pediu CAPTCHA (bloqueio anti-bot) - resultado vazio "
               "NAO significa 'sem pagina', significa 'nao deu pra buscar agora'. "
               "Espere alguns minutos ou espace mais as chamadas.")
+        _register_failure("CAPTCHA")
         return []
+
+    _ddg_consecutive_failures = 0
 
     soup = BeautifulSoup(html, "lxml")
     results = []
@@ -409,7 +463,8 @@ def parse_evdatabase_specs(html: str) -> dict[str, str]:
 
 
 # --------------------------------------------------------------------------
-# Fontes .br (iCarros, Webmotors, Quatro Rodas, UOL Carros, Autoesporte)
+# Fontes .br (iCarros, Webmotors, UOL Carros, Autoesporte, Motor1 Brasil,
+# CarrosNaWeb, FlatOut, Best Cars, AutoPapo)
 # --------------------------------------------------------------------------
 #
 # Sem sitemap publico nem API de busca proprios (ao contrario do EV
@@ -418,11 +473,22 @@ def parse_evdatabase_specs(html: str) -> dict[str, str]:
 # definido acima. "ficha tecnica" no texto da busca ajuda o DDG a priorizar
 # a pagina de especificacoes em vez de noticia/review/anuncio de venda.
 #
-# parse_br_generic_specs() e compartilhado entre todas elas: como nao deu
-# pra inspecionar o HTML ao vivo de cada site ao escrever este codigo (ver
-# aviso no topo do arquivo), um parser generico multi-estrategia e mais
-# seguro do que "adivinhar" um seletor CSS especifico que pode nem existir
-# mais. CONFIRA a contagem de campos por fonte na primeira rodada.
+# parse_br_generic_specs() e compartilhado entre a maioria delas: como nao
+# deu pra inspecionar o HTML ao vivo de cada site ao escrever este codigo
+# (ver aviso no topo do arquivo), um parser generico multi-estrategia e
+# mais seguro do que "adivinhar" um seletor CSS especifico que pode nem
+# existir mais. CONFIRA a contagem de campos por fonte na primeira rodada.
+#
+# Duas fontes que ESTAVAM nessa lista foram removidas/ajustadas depois de
+# uma checagem ao vivo (nao so teorica) feita em 2026-09-11:
+#   - Webmotors: confirmado bloqueio anti-bot ("Access to this page has
+#     been denied" - HTTP 200 mas pagina vazia de conteudo). Fica registrada
+#     abaixo, mas nao espere campos dela sem headless browser + rotacao de
+#     IP (fora do escopo desta PoC).
+#   - Quatro Rodas (quatrorodas.abril.com.br): confirmado que virou revista
+#     digital fechada (Abril Signature) - a home so tem links de navegacao
+#     pro resto do grupo Abril e chamada de assinatura, sem ficha tecnica
+#     acessivel sem login. REMOVIDA de SOURCES (nao ha o que raspar).
 
 def locate_icarros(query: str) -> str | None:
     return duckduckgo_first_result(f"{query} ficha tecnica", site="icarros.com.br")
@@ -470,6 +536,50 @@ def locate_uolcarros(query: str) -> str | None:
 
 def locate_autoesporte(query: str) -> str | None:
     return duckduckgo_first_result(f"{query} ficha tecnica", site="autoesporte.globo.com")
+
+
+def locate_motor1(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} ficha tecnica", site="motor1.uol.com.br")
+
+
+def locate_carrosnaweb(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} ficha tecnica", site="carrosnaweb.com.br")
+
+
+def locate_flatout(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} ficha tecnica", site="flatout.com.br")
+
+
+def locate_bestcars(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} ficha tecnica", site="bestcars.com.br")
+
+
+def locate_autopapo(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} ficha tecnica", site="autopapo.com.br")
+
+
+# Grandes portais de noticia (nao especializados em carro) - adicionados a
+# pedido explicito do usuario em 2026-09-11 como "fontes confiaveis" pra
+# alimentar um sistema de aprendizado do Assistente (Henry). Diferente das
+# fontes de "ficha tecnica" acima, aqui a busca NAO usa "ficha tecnica" no
+# texto (esses portais raramente tem pagina de especificacoes tabulada -
+# e mais noticia/lancamento/preco em prosa), entao o parser generico
+# (parse_br_generic_specs) tende a render menos campos estruturados e mais
+# via o fallback fraco de "Label: Valor" solto no texto. Ainda assim vale
+# registrar: da pro Radar mostrar como "descoberta" (texto bruto) mesmo sem
+# virar numero normalizado na Grid, e mantém o app.tsx (`src/lib/
+# trustedSources.ts`) e o pipeline com o MESMO conjunto de dominios
+# "confiaveis" dos dois lados.
+def locate_g1(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} carro", site="g1.globo.com")
+
+
+def locate_r7(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} carro", site="r7.com")
+
+
+def locate_band(query: str) -> str | None:
+    return duckduckgo_first_result(f"{query} carro", site="band.uol.com.br")
 
 
 _BR_WEAK_VALUES = {"no data", "-", "n/d", "nao informado", "n/a", ""}
@@ -555,6 +665,14 @@ SOURCES = [
     {"name": "Quatro Rodas", "locate": locate_quatrorodas, "parse": parse_br_generic_specs},
     {"name": "UOL Carros", "locate": locate_uolcarros, "parse": parse_br_generic_specs},
     {"name": "Autoesporte", "locate": locate_autoesporte, "parse": parse_br_generic_specs},
+    {"name": "Motor1 Brasil", "locate": locate_motor1, "parse": parse_br_generic_specs},
+    {"name": "CarrosNaWeb", "locate": locate_carrosnaweb, "parse": parse_br_generic_specs},
+    {"name": "FlatOut", "locate": locate_flatout, "parse": parse_br_generic_specs},
+    {"name": "Best Cars", "locate": locate_bestcars, "parse": parse_br_generic_specs},
+    {"name": "AutoPapo", "locate": locate_autopapo, "parse": parse_br_generic_specs},
+    {"name": "G1", "locate": locate_g1, "parse": parse_br_generic_specs},
+    {"name": "R7", "locate": locate_r7, "parse": parse_br_generic_specs},
+    {"name": "Band", "locate": locate_band, "parse": parse_br_generic_specs},
 ]
 
 

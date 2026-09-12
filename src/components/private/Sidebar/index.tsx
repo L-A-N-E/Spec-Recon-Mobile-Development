@@ -3,10 +3,10 @@ import {
     LayoutDashboard,
     GitCompare,
     Bot,
-    ShieldCheck,
 } from "lucide-react"
 
 import { Link, useLocation } from "react-router-dom"
+import LogoSpecRecon from "../../../assets/logo_spec_recon_branca.png"
 
 const navItems = [
     {
@@ -70,9 +70,11 @@ function Sidebar() {
                 "
             >
 
-                <div className="w-11 h-11 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <ShieldCheck className="w-5 h-5 text-white" />
-                </div>
+                <img
+                    src={LogoSpecRecon}
+                    alt="Spec Recon"
+                    className="w-11 h-11 object-contain"
+                />
 
                 <div>
 

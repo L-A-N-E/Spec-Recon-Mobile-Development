@@ -6,38 +6,74 @@ import {
     Sparkles,
     User,
     ShieldCheck,
+    Globe,
+    RotateCcw,
+    BadgeCheck,
+    ShieldQuestion,
 } from "lucide-react"
 
-import { buildOsintContext } from "../../lib/osint"
+import { buildOsintContext, NO_OSINT_CONTEXT } from "../../lib/osint"
+import { buildSalesContext } from "../../lib/sales"
+import { webSearchFallback } from "../../lib/webSearch"
+import { learnTrustedDomain } from "../../lib/trustedSources"
+
+import agentsDoc from "../../AGENTS.md?raw"
 
 type MessageType = {
     role: "user" | "assistant"
     content: string
+    /** presente quando a resposta usou o fallback de busca web (nao so dados
+     * locais) - a UI mostra a fonte direto (nao depende do modelo lembrar
+     * de citar no texto, ver AGENTS.md regra 3). `trusted` vem do registro
+     * de fontes confiaveis (lib/trustedSources.ts) - "sistema de
+     * aprendizado": fonte nao confiavel ganha um botao pro usuario aprovar
+     * manualmente, nunca confia sozinha so por aparecer numa busca. */
+    webSource?: { label: string; url: string; trusted: boolean }
 }
 
 // Modelo rodando localmente via Ollama (gratuito, sem API key - so funciona
-// com `ollama serve` ativo na maquina de quem esta usando a pagina).
+// com `ollama serve` ativo na maquina de quem esta usando a pagina). Trocado
+// de llama3.2 (3B) pra llama3.1 (8B): melhor raciocinio e portugues sem
+// pesar demais numa maquina com 16GB de RAM - se tiver mais RAM sobrando,
+// qwen2.5:14b tende a ser ainda melhor em pt-BR.
 const OLLAMA_URL = "http://localhost:11434/api/chat"
-const OLLAMA_MODEL = "llama3.2"
+const OLLAMA_MODEL = "llama3.1:8b"
 
 const suggestions = [
+    "Quantos carros a Fiat vendeu em 2025 e quanto faturou?",
     "Qual a autonomia da BYD Seal?",
-    "Quais concorrentes usam arquitetura 800V?",
     "Compare a potência do Tesla Model 3 e do Kia EV6",
-    "O que sabemos sobre carregamento da Hyundai Ioniq 5?",
+    "Quem foi Henry Ford?",
 ]
 
 const initialMessages: MessageType[] = [
     {
         role: "assistant",
         content:
-            "Olá. Sou o Sentinel, assistente estratégico da Ford. Respondo com base nos dados reais coletados pelo Radar (Wikipedia + EV Database) sobre Tesla, BYD, Toyota, GM, Rivian, Hyundai, Kia e Volkswagen. Rodando localmente via Ollama.",
+            "Olá, sou o Henry — assistente estratégico da Ford, batizado em homenagem ao fundador da empresa. Respondo com base nos dados reais coletados pelo Radar (ficha técnica + vendas Fenabrave) e, quando não encontro algo localmente, busco na internet e aviso a fonte. Rodando localmente via Ollama.",
     },
 ]
 
+// Conversa persiste no localStorage do navegador (por dispositivo, nao
+// sincroniza entre maquinas/contas) - sobrevive a refresh/fechar aba, mas
+// se perde se o usuario limpar dados do site ou trocar de navegador.
+const STORAGE_KEY = "spec-recon:henry-chat"
+
+function loadStoredMessages(): MessageType[] | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (!raw) return null
+
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : null
+    } catch {
+        return null // localStorage indisponivel (modo privado) ou JSON corrompido - comeca do zero
+    }
+}
+
 function Assistant() {
 
-    const [messages, setMessages] = useState<MessageType[]>(initialMessages)
+    const [messages, setMessages] = useState<MessageType[]>(() => loadStoredMessages() ?? initialMessages)
 
     const [input, setInput] = useState("")
     const [thinking, setThinking] = useState(false)
@@ -55,16 +91,67 @@ function Assistant() {
 
     }, [messages, thinking])
 
-    async function generateResponse(text: string, history: MessageType[]) {
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+        } catch {
+            // localStorage indisponivel/cheio - conversa so nao persiste, app continua funcionando normal
+        }
+    }, [messages])
 
-        const context = buildOsintContext(text)
+    function trustSource(messageIndex: number) {
+        setMessages((prev) =>
+            prev.map((m, i) => {
+                if (i !== messageIndex || !m.webSource) return m
+                learnTrustedDomain(m.webSource.url)
+                return { ...m, webSource: { ...m.webSource, trusted: true } }
+            })
+        )
+    }
 
-        const systemPrompt = `Você é o Sentinel, assistente de inteligência competitiva da plataforma Spec Recon (Ford). Responda sempre em português, de forma direta e objetiva.
+    function clearConversation() {
+        setMessages(initialMessages)
+        try {
+            localStorage.removeItem(STORAGE_KEY)
+        } catch {
+            // nada a fazer se localStorage nao estiver disponivel
+        }
+    }
 
-Use SOMENTE os dados de contexto abaixo (coletados via OSINT: Wikipedia + EV Database) para responder sobre especificações técnicas e concorrentes. Se o contexto não tiver a informação pedida, diga claramente que não encontrou esse dado na coleta atual - não invente números.
+    async function generateResponse(
+        text: string,
+        history: MessageType[]
+    ): Promise<{ content: string; webSource?: { label: string; url: string; trusted: boolean } }> {
 
-Contexto coletado:
-${context}`
+        const osintContext = buildOsintContext(text)
+        const salesContext = buildSalesContext(text)
+
+        const localDataFound = osintContext !== NO_OSINT_CONTEXT || salesContext !== ""
+
+        let webBlock = ""
+        let webSource: { label: string; url: string; trusted: boolean } | undefined
+
+        if (!localDataFound) {
+            const webResult = await webSearchFallback(text)
+
+            if (webResult) {
+                webSource = { label: webResult.sourceLabel, url: webResult.sourceUrl, trusted: webResult.trusted }
+
+                const trustNote = webResult.trusted
+                    ? "fonte confiável (registrada como grande veículo de comunicação ou base técnica)"
+                    : "ATENÇÃO: fonte NÃO verificada - trate com mais cautela, deixe claro pro usuário que não é uma fonte confiável conhecida"
+
+                webBlock = `\n\n[BUSCA WEB - os dados locais nao cobriam essa pergunta, use o resultado abaixo]\nFonte: ${webResult.sourceLabel} (${webResult.sourceUrl}) - ${trustNote}\n${webResult.text}`
+            }
+        }
+
+        const systemPrompt = `${agentsDoc}
+
+---
+
+Contexto coletado (dados locais - ficha técnica OSINT e vendas/faturamento Fenabrave):
+${osintContext}
+${salesContext || "(nenhum dado de vendas/faturamento bate com essa pergunta)"}${webBlock}`
 
         const ollamaMessages = [
             { role: "system", content: systemPrompt },
@@ -88,8 +175,10 @@ ${context}`
 
         const data = await response.json()
 
-        return (data.message?.content as string | undefined)?.trim()
+        const content = (data.message?.content as string | undefined)?.trim()
             || "Não consegui gerar uma resposta a partir do modelo local."
+
+        return { content, webSource }
     }
 
     async function sendMessage(text?: string) {
@@ -115,11 +204,11 @@ ${context}`
 
         try {
 
-            const reply = await generateResponse(content, history)
+            const { content: reply, webSource } = await generateResponse(content, history)
 
             setMessages((prev) => [
                 ...prev,
-                { role: "assistant", content: reply },
+                { role: "assistant", content: reply, webSource },
             ])
 
         } catch {
@@ -129,7 +218,7 @@ ${context}`
                 {
                     role: "assistant",
                     content:
-                        "Não consegui falar com o modelo local (Ollama). Confirme que ele está rodando (`ollama serve` ou `brew services start ollama`) e que o modelo foi baixado (`ollama pull llama3.2`).",
+                        `Não consegui falar com o modelo local (Ollama). Confirme que ele está rodando (\`ollama serve\` ou \`brew services start ollama\`) e que o modelo foi baixado (\`ollama pull ${OLLAMA_MODEL}\`).`,
                 },
             ])
 
@@ -185,7 +274,7 @@ ${context}`
                             tracking-tight
                             text-white
                         ">
-                            Sentinel Assistant
+                            Henry
                         </h1>
 
                         <div className="
@@ -204,9 +293,34 @@ ${context}`
                                 animate-pulse
                             " />
 
-                            Online · Inteligência OSINT ativa
+                            Online · OSINT + vendas + busca web
                         </div>
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={clearConversation}
+                        className="
+                            ml-auto
+                            flex
+                            items-center
+                            gap-2
+                            h-10
+                            px-4
+                            rounded-xl
+                            border
+                            border-white/10
+                            text-sm
+                            text-white/60
+                            hover:bg-white/5
+                            hover:text-white
+                            transition-colors
+                            cursor-pointer
+                        "
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        Nova conversa
+                    </button>
                 </div>
             </div>
 
@@ -298,7 +412,46 @@ ${context}`
                                         }
                                     `}
                                 >
+                                    {message.webSource && (
+                                        <div className="flex items-center gap-1.5 mb-2 text-[11px] uppercase tracking-wider text-blue-300/80">
+                                            <Globe className="w-3 h-3" />
+                                            Busca web
+                                            {message.webSource.trusted ? (
+                                                <span className="flex items-center gap-1 text-green-400 normal-case tracking-normal">
+                                                    <BadgeCheck className="w-3 h-3" />
+                                                    fonte confiável
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 text-amber-400 normal-case tracking-normal">
+                                                    <ShieldQuestion className="w-3 h-3" />
+                                                    não verificada
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                     {message.content}
+                                    {message.webSource && (
+                                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                                            <a
+                                                href={message.webSource.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex items-center gap-1.5 text-xs text-blue-300/70 hover:text-blue-300 transition-colors w-fit"
+                                            >
+                                                Fonte: {message.webSource.label}
+                                            </a>
+
+                                            {!message.webSource.trusted && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => trustSource(index)}
+                                                    className="text-xs text-amber-300/80 hover:text-amber-300 underline underline-offset-2 transition-colors cursor-pointer"
+                                                >
+                                                    Confiar nesta fonte
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {isUser && (

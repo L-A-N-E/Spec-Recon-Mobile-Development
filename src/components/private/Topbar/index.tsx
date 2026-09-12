@@ -5,7 +5,6 @@ import {
     LayoutDashboard,
     GitCompare,
     Bot,
-    ShieldCheck,
     Bell,
     Search,
     Menu,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { Link, useLocation } from "react-router-dom"
+import LogoSpecRecon from "../../../assets/logo_spec_recon_branca.png"
 
 import PictureProfile from "../PictureProfile"
 
@@ -81,12 +81,14 @@ function TopBar() {
                         </button>
 
                         <Link
-                            to="/dashboard"
+                            to="/radar"
                             className="flex items-center gap-2"
                         >
-                            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                                <ShieldCheck className="w-4 h-4 text-white" />
-                            </div>
+                            <img
+                                src={LogoSpecRecon}
+                                alt="Spec Recon"
+                                className="w-8 h-8 object-contain"
+                            />
 
                             <span className="font-semibold tracking-tight">
                                 Spec Recon

@@ -52,10 +52,10 @@ function Error() {
                         </Button>
                     </Link>
 
-                    <Link to="/dashboard">
+                    <Link to="/radar">
                         <Button variant="outline">
                             <ArrowLeft className="w-4 h-4" />
-                            Ir para Dashboard
+                            Ir para o Radar
                         </Button>
                     </Link>
                 </div>

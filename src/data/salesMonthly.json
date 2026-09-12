@@ -1,0 +1,643 @@
+{
+  "meta": {
+    "month": "agosto",
+    "year": 2026,
+    "label": "Agosto/2026",
+    "sources": [
+      {
+        "name": "Autoesporte",
+        "url": "https://autoesporte.globo.com/setor-automotivo/mercado-automotivo/noticia/2026/09/50-carros-mais-vendidos-brasil-agosto-2026.ghtml"
+      },
+      {
+        "name": "Quatro Rodas",
+        "url": "https://quatrorodas.abril.com.br/noticias/vendas-de-carros-0km-crescem-quase-20-em-2026-veja-os-15-carros-mais-vendidos-em-agosto/"
+      }
+    ],
+    "generated_at": "2026-09-11T23:25:08.641460",
+    "note": "Ranking do MES ISOLADO (nao acumulado do ano - ver salesRankings.json pra isso). Quando 2 fontes de imprensa publicam o mesmo mes, 'units' e a media das duas e 'sources_agree' indica se elas bateram (diferença <= 2.0%) ou nao."
+  },
+  "by_brand": [
+    {
+      "brand": "Fiat",
+      "units_autoesporte": 48341,
+      "rank_autoesporte": 1,
+      "units_quatro_rodas": 48427,
+      "rank_quatro_rodas": 1,
+      "units": 48384,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Volkswagen",
+      "units_autoesporte": 41980,
+      "rank_autoesporte": 2,
+      "units_quatro_rodas": 41403,
+      "rank_quatro_rodas": 2,
+      "units": 41692,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Chevrolet",
+      "units_autoesporte": 27515,
+      "rank_autoesporte": 3,
+      "units_quatro_rodas": 27504,
+      "rank_quatro_rodas": 3,
+      "units": 27510,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "BYD",
+      "units_autoesporte": 24467,
+      "rank_autoesporte": 4,
+      "units_quatro_rodas": 24441,
+      "rank_quatro_rodas": 4,
+      "units": 24454,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Hyundai",
+      "units_autoesporte": 17017,
+      "rank_autoesporte": 5,
+      "units_quatro_rodas": 17017,
+      "rank_quatro_rodas": 5,
+      "units": 17017,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Toyota",
+      "units_autoesporte": 13468,
+      "rank_autoesporte": 6,
+      "units_quatro_rodas": 13561,
+      "rank_quatro_rodas": 6,
+      "units": 13514,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "GWM",
+      "units_autoesporte": 9924,
+      "rank_autoesporte": 7,
+      "units_quatro_rodas": 9825,
+      "rank_quatro_rodas": 7,
+      "units": 9874,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Honda",
+      "units_autoesporte": 9677,
+      "rank_autoesporte": 8,
+      "units_quatro_rodas": 9678,
+      "rank_quatro_rodas": 9,
+      "units": 9678,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Renault",
+      "units_autoesporte": 9366,
+      "rank_autoesporte": 9,
+      "units_quatro_rodas": 9784,
+      "rank_quatro_rodas": 8,
+      "units": 9575,
+      "n_sources": 2,
+      "sources_agree": false
+    },
+    {
+      "brand": "Jeep",
+      "units_autoesporte": 9027,
+      "rank_autoesporte": 10,
+      "units_quatro_rodas": 9027,
+      "rank_quatro_rodas": 10,
+      "units": 9027,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Geely",
+      "units_quatro_rodas": 7525,
+      "rank_quatro_rodas": 11,
+      "units": 7525,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Nissan",
+      "units_quatro_rodas": 6429,
+      "rank_quatro_rodas": 12,
+      "units": 6429,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chery",
+      "units_quatro_rodas": 6014,
+      "rank_quatro_rodas": 13,
+      "units": 6014,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Ford",
+      "units_quatro_rodas": 4706,
+      "rank_quatro_rodas": 14,
+      "units": 4706,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Omoda",
+      "units_quatro_rodas": 3616,
+      "rank_quatro_rodas": 15,
+      "units": 3616,
+      "n_sources": 1,
+      "sources_agree": null
+    }
+  ],
+  "by_model": [
+    {
+      "brand": "Fiat",
+      "model": "Strada",
+      "units_autoesporte": 13794,
+      "rank_autoesporte": 1,
+      "units_quatro_rodas": 13796,
+      "rank_quatro_rodas": 1,
+      "units": 13795,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Polo",
+      "units_autoesporte": 10472,
+      "rank_autoesporte": 2,
+      "units_quatro_rodas": 10472,
+      "rank_quatro_rodas": 2,
+      "units": 10472,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Tera",
+      "units_autoesporte": 10338,
+      "rank_autoesporte": 3,
+      "units_quatro_rodas": 10338,
+      "rank_quatro_rodas": 3,
+      "units": 10338,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Fiat",
+      "model": "Argo",
+      "units_autoesporte": 8811,
+      "rank_autoesporte": 4,
+      "units_quatro_rodas": 8811,
+      "rank_quatro_rodas": 4,
+      "units": 8811,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "BYD",
+      "model": "Dolphin Mini",
+      "units_autoesporte": 8299,
+      "rank_autoesporte": 5,
+      "units_quatro_rodas": 8299,
+      "rank_quatro_rodas": 5,
+      "units": 8299,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Onix",
+      "units_autoesporte": 7635,
+      "rank_autoesporte": 6,
+      "units_quatro_rodas": 7635,
+      "rank_quatro_rodas": 6,
+      "units": 7635,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Hyundai",
+      "model": "Creta",
+      "units_autoesporte": 7354,
+      "rank_autoesporte": 7,
+      "units_quatro_rodas": 7354,
+      "rank_quatro_rodas": 7,
+      "units": 7354,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "T-Cross",
+      "units_autoesporte": 6815,
+      "rank_autoesporte": 8,
+      "units_quatro_rodas": 6815,
+      "rank_quatro_rodas": 8,
+      "units": 6815,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "BYD",
+      "model": "Dolphin",
+      "units_autoesporte": 6740,
+      "rank_autoesporte": 9,
+      "units_quatro_rodas": 6740,
+      "rank_quatro_rodas": 9,
+      "units": 6740,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "GWM",
+      "model": "Haval H6",
+      "units_autoesporte": 6433,
+      "rank_autoesporte": 10,
+      "units_quatro_rodas": 6433,
+      "rank_quatro_rodas": 10,
+      "units": 6433,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Geely",
+      "model": "EX2",
+      "units_autoesporte": 5805,
+      "rank_autoesporte": 11,
+      "units_quatro_rodas": 5805,
+      "rank_quatro_rodas": 11,
+      "units": 5805,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Fiat",
+      "model": "Toro",
+      "units_autoesporte": 5707,
+      "rank_autoesporte": 12,
+      "units_quatro_rodas": 5707,
+      "rank_quatro_rodas": 12,
+      "units": 5707,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Fiat",
+      "model": "Mobi",
+      "units_autoesporte": 5587,
+      "rank_autoesporte": 13,
+      "units_quatro_rodas": 5587,
+      "rank_quatro_rodas": 13,
+      "units": 5587,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Tracker",
+      "units_autoesporte": 5326,
+      "rank_autoesporte": 14,
+      "units_quatro_rodas": 5326,
+      "rank_quatro_rodas": 14,
+      "units": 5326,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Hyundai",
+      "model": "HB20",
+      "units_autoesporte": 5309,
+      "rank_autoesporte": 15,
+      "units_quatro_rodas": 5309,
+      "rank_quatro_rodas": 15,
+      "units": 5309,
+      "n_sources": 2,
+      "sources_agree": true
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Saveiro",
+      "units_autoesporte": 5295,
+      "rank_autoesporte": 16,
+      "units": 5295,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Fiat",
+      "model": "Fastback",
+      "units_autoesporte": 5126,
+      "rank_autoesporte": 17,
+      "units": 5126,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Onix Plus",
+      "units_autoesporte": 4944,
+      "rank_autoesporte": 18,
+      "units": 4944,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Fiat",
+      "model": "Pulse",
+      "units_autoesporte": 4775,
+      "rank_autoesporte": 19,
+      "units": 4775,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Jeep",
+      "model": "Compass",
+      "units_autoesporte": 4547,
+      "rank_autoesporte": 20,
+      "units": 4547,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Renault",
+      "model": "Kwid",
+      "units_autoesporte": 4436,
+      "rank_autoesporte": 21,
+      "units": 4436,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Toyota",
+      "model": "Yaris Cross",
+      "units_autoesporte": 4414,
+      "rank_autoesporte": 22,
+      "units": 4414,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "BYD",
+      "model": "Song Pro",
+      "units_autoesporte": 4283,
+      "rank_autoesporte": 23,
+      "units": 4283,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Toyota",
+      "model": "Hilux",
+      "units_autoesporte": 3471,
+      "rank_autoesporte": 24,
+      "units": 3471,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Honda",
+      "model": "WR-V",
+      "units_autoesporte": 3445,
+      "rank_autoesporte": 25,
+      "units": 3445,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chery",
+      "model": "Tiggo 5X",
+      "units_autoesporte": 3398,
+      "rank_autoesporte": 26,
+      "units": 3398,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Omoda",
+      "model": "5",
+      "units_autoesporte": 3344,
+      "rank_autoesporte": 27,
+      "units": 3344,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Honda",
+      "model": "HR-V",
+      "units_autoesporte": 3279,
+      "rank_autoesporte": 28,
+      "units": 3279,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Toyota",
+      "model": "Corolla Cross",
+      "units_autoesporte": 3265,
+      "rank_autoesporte": 29,
+      "units": 3265,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Nivus",
+      "units_autoesporte": 3259,
+      "rank_autoesporte": 30,
+      "units": 3259,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Nissan",
+      "model": "Kait",
+      "units_autoesporte": 3194,
+      "rank_autoesporte": 31,
+      "units": 3194,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Ford",
+      "model": "Ranger",
+      "units_autoesporte": 3130,
+      "rank_autoesporte": 32,
+      "units": 3130,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Hyundai",
+      "model": "i20",
+      "units_autoesporte": 3042,
+      "rank_autoesporte": 33,
+      "units": 3042,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Jeep",
+      "model": "Renegade",
+      "units_autoesporte": 3039,
+      "rank_autoesporte": 34,
+      "units": 3039,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Virtus",
+      "units_autoesporte": 2864,
+      "rank_autoesporte": 35,
+      "units": 2864,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "S10",
+      "units_autoesporte": 2759,
+      "rank_autoesporte": 36,
+      "units": 2759,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Sonic",
+      "units_autoesporte": 2651,
+      "rank_autoesporte": 37,
+      "units": 2651,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Nissan",
+      "model": "Kicks",
+      "units_autoesporte": 2649,
+      "rank_autoesporte": 38,
+      "units": 2649,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "BYD",
+      "model": "Song Plus",
+      "units_autoesporte": 2429,
+      "rank_autoesporte": 39,
+      "units": 2429,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "RAM",
+      "model": "Rampage",
+      "units_autoesporte": 2303,
+      "rank_autoesporte": 40,
+      "units": 2303,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Jaecoo",
+      "model": "7",
+      "units_autoesporte": 2287,
+      "rank_autoesporte": 41,
+      "units": 2287,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Fiat",
+      "model": "Cronos",
+      "units_autoesporte": 2066,
+      "rank_autoesporte": 42,
+      "units": 2066,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Fiat",
+      "model": "Fiorino",
+      "units_autoesporte": 1845,
+      "rank_autoesporte": 43,
+      "units": 1845,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Geely",
+      "model": "EX5",
+      "units_autoesporte": 1720,
+      "rank_autoesporte": 44,
+      "units": 1720,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Spin",
+      "units_autoesporte": 1636,
+      "rank_autoesporte": 45,
+      "units": 1636,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Montana",
+      "units_autoesporte": 1587,
+      "rank_autoesporte": 46,
+      "units": 1587,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Honda",
+      "model": "City Sedan",
+      "units_autoesporte": 1479,
+      "rank_autoesporte": 47,
+      "units": 1479,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Honda",
+      "model": "City Hatch",
+      "units_autoesporte": 1447,
+      "rank_autoesporte": 48,
+      "units": 1447,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "BYD",
+      "model": "King",
+      "units_autoesporte": 1433,
+      "rank_autoesporte": 49,
+      "units": 1433,
+      "n_sources": 1,
+      "sources_agree": null
+    },
+    {
+      "brand": "Renault",
+      "model": "Kardian",
+      "units_autoesporte": 1414,
+      "rank_autoesporte": 50,
+      "units": 1414,
+      "n_sources": 1,
+      "sources_agree": null
+    }
+  ]
+}

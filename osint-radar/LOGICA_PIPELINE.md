@@ -12,7 +12,7 @@ Existem duas "trilhas" de dados independentes:
 Trilha 1: FICHA TÉCNICA (specs de cada veículo)
   osint_radar.py  →  funções de coleta/parse por fonte
         ↓ importado por
-  build_dataset.py  →  roda o CATALOG inteiro (~140 veículos)
+  build_dataset.py  →  roda o CATALOG inteiro (239 veículos)
         ↓ ou, pra 1 veículo só
   collect_vehicle.py  →  roda 1 veículo e faz merge incremental
         ↓
@@ -45,14 +45,20 @@ Isso deixa adicionar fonte nova trivial: escreve as duas funções, registra
 em `SOURCES`, pronto — todo o resto do pipeline (categorização,
 export, merge) já funciona pra ela.
 
-**As 7 fontes registradas hoje:**
+**As 11 fontes registradas hoje:**
 
 | Fonte | Como localiza a página | Como faz parse |
 |---|---|---|
 | Wikipedia | API de busca própria da Wikipedia (pt **e** en, fica com a que trouxer mais campos — `fetch_best_wikipedia`) | tabela `infobox` (padrão `<th>`+`<td>`) |
 | EV Database | sitemap.xml público do site, casado por slug (`locate_evdatabase`) | tabelas de 2 colunas sem `<th>` |
 | iCarros | DuckDuckGo restrito ao domínio | parser **dedicado**, validado contra HTML real: `<div class="technical-sheet-item">` com 2 `<span>` (label/valor) |
-| Webmotors, Quatro Rodas, UOL Carros, Autoesporte | DuckDuckGo restrito ao domínio | `parse_br_generic_specs` — genérico, 4 estratégias em cascata (tabela th/td → tabela 2 colunas → `dl/dt/dd` → texto solto "Label: Valor") |
+| Webmotors | DuckDuckGo restrito ao domínio | `parse_br_generic_specs` — mas o domínio **confirmou bloqueio anti-bot** ao vivo (resposta 200 com corpo "Access to this page has been denied"); não espere campos daqui sem headless browser |
+| UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut, Best Cars, AutoPapo | DuckDuckGo restrito ao domínio | `parse_br_generic_specs` — genérico, 4 estratégias em cascata (tabela th/td → tabela 2 colunas → `dl/dt/dd` → texto solto "Label: Valor") |
+
+Quatro Rodas (`quatrorodas.abril.com.br`) foi **removida** da lista: checagem
+ao vivo em 2026-09-11 mostrou que virou revista digital fechada (Abril
+Signature) — a home só tem navegação para o resto do grupo Abril e chamada
+de assinatura, sem ficha técnica acessível sem login.
 
 **Por que Wikipedia/EV Database não usam busca e as .br usam DuckDuckGo:**
 Wikipedia e EV Database têm API/sitemap próprios — estável, sem
@@ -61,9 +67,13 @@ CAPTCHA. Os sites .br não, então a única opção era busca externa
 depois de poucas dezenas de chamadas seguidas, o DuckDuckGo passa a
 devolver uma página de CAPTCHA em vez de resultado. Isso é detectado
 explicitamente (`_DDG_BLOCK_MARKERS` em `duckduckgo_search`) e avisado no
-console — não falha silenciosamente como "página não encontrada".
+console — não falha silenciosamente como "página não encontrada". Em
+alguns ambientes de rede (ex.: IPs de datacenter/sandbox) esse bloqueio
+já aparece depois de só 2-3 chamadas, bem antes das "poucas dezenas"
+observadas originalmente — se isso acontecer, rode o pipeline de uma rede
+residencial/doméstica em vez de nuvem.
 
-**Por que o parser das 4 fontes .br genéricas é "melhor esforço":** foram
+**Por que o parser das fontes .br genéricas é "melhor esforço":** foram
 cadastradas sem conseguir inspecionar o HTML ao vivo de cada uma no
 momento em que o código foi escrito. Em vez de um seletor CSS específico
 (que podia estar simplesmente errado e falhar 100% silencioso), o parser
@@ -87,16 +97,20 @@ quantos campos cada fonte extrai na prática).
 
 ## 2. `build_dataset.py` — roda o catálogo inteiro e exporta pro frontend
 
-**Papel:** decide QUAIS veículos coletar (`CATALOG`, ~140 entradas
+**Papel:** decide QUAIS veículos coletar (`CATALOG`, 239 entradas
 `{brand, model}`) e ORQUESTRA as fontes do `osint_radar.py` pra cada um,
 depois normaliza specs numéricas e exporta os 2 JSON que o frontend lê.
 
-**`CATALOG`:** lista fixa de marca+modelo. Tem duas seções: os EVs
-globais (Tesla, BYD, Hyundai...) que o EV Database cobre bem, e um bloco
-"populares Brasil" (Onix, HB20, Strada, Polo...) — carros a
-combustão/híbridos que o EV Database ignora (só cobre elétricos) e que a
-Wikipedia em inglês documenta mal; a fonte principal pra esses é
-Wikipedia PT + os sites .br.
+**`CATALOG`:** lista fixa de marca+modelo, hoje com 239 veículos em 42
+marcas (era ~140/36 antes da expansão de 2026-09-11). Tem três seções: os
+EVs globais (Tesla, BYD, Hyundai...) que o EV Database cobre bem, o bloco
+histórico "populares Brasil" (Onix, HB20, Strada, Polo...) e o bloco novo
+"mercado brasileiro completo (fase 2)", que estende a cobertura pra
+praticamente todo o catálogo vendido novo no Brasil hoje — inclui marcas
+que não tinham NENHUM modelo cadastrado antes (GWM/Haval, Chery/CAOA
+Chery, JAC, RAM). Carros a combustão/híbridos o EV Database ignora (só
+cobre elétricos) e a Wikipedia em inglês documenta mal; a fonte principal
+pra esses é Wikipedia PT + os sites .br.
 
 **`scan_target(brand, model)`:** pra 1 veículo, chama Wikipedia primeiro
 (tratamento especial — tenta pt+en), depois itera o resto de `SOURCES`.
@@ -128,7 +142,7 @@ entre fontes pra não estourar o DuckDuckGo tão rápido), monta
 campo por fonte por veículo — consumida pelo Radar e pelo Dashboard) e
 `osintVehicleSpecs.json` (1 linha por veículo, specs já numéricas —
 consumida pela Grid). **Roda o catálogo inteiro, então sobrescreve os 2
-JSON do zero** — é lento (~140 veículos × até 7 fontes) e arriscado (todo
+JSON do zero** — é lento (239 veículos × até 11 fontes) e arriscado (todo
 esse volume de chamada ao DuckDuckGo tende a tomar CAPTCHA antes de
 terminar).
 
@@ -138,7 +152,7 @@ terminar).
 
 **Por que existe:** rodar `build_dataset.py` inteiro é lento e
 sobrescreve tudo; se só falta 1 veículo (ou o DuckDuckGo bloqueou no meio
-do caminho), não faz sentido re-coletar os ~140. Este script reusa o
+do caminho), não faz sentido re-coletar os 239. Este script reusa o
 MESMO `scan_target` do `build_dataset.py` (é literalmente importado de
 lá — zero duplicação de lógica de coleta), mas pra 1 `{brand, model}` só,
 e faz **merge** no JSON existente em vez de sobrescrever:

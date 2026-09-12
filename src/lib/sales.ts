@@ -6,6 +6,7 @@
 
 import rawSales from "../data/salesRankings.json"
 import rawRegional from "../data/salesByRegion.json"
+import rawMonthly from "../data/salesMonthly.json"
 
 export type SalesMeta = {
     year_current: number
@@ -89,10 +90,52 @@ type RegionalData = {
     by_region: RegionAggregate[]
 }
 
+// Ranking MENSAL (mes isolado, nao acumulado do ano) coletado por
+// osint-radar/press_sales.py + build_monthly_sales.py, de portais de
+// imprensa (Autoesporte, Quatro Rodas) - complementa o acumulado anual
+// de SalesRankingItem acima. `units_*` por fonte + `units` (media) +
+// `sources_agree` (as fontes bateram dentro de ~2%?) deixam a checagem
+// cruzada visivel em vez de esconder de onde veio o numero.
+export type MonthlySourceRef = { name: string; url: string }
+
+export type MonthlyMeta = {
+    month: string
+    year: number
+    label: string
+    sources: MonthlySourceRef[]
+    generated_at: string
+    note: string
+}
+
+export type MonthlyBrandRow = {
+    brand: string
+    units: number | null
+    n_sources: number
+    sources_agree: boolean | null
+    [unitsBySource: string]: unknown
+}
+
+export type MonthlyModelRow = {
+    brand: string
+    model: string
+    units: number | null
+    n_sources: number
+    sources_agree: boolean | null
+    [unitsBySource: string]: unknown
+}
+
+type MonthlyData = {
+    meta: MonthlyMeta
+    by_brand: MonthlyBrandRow[]
+    by_model: MonthlyModelRow[]
+}
+
 const data = rawSales as SalesData
 const regional = rawRegional as RegionalData
+const monthly = rawMonthly as MonthlyData
 
 export const SALES_META = data.meta
+export const MONTHLY_SALES_META = monthly.meta
 export const REGIONAL_META = regional.meta
 
 export function getSalesRankings(): SalesRankingItem[] {
@@ -167,4 +210,111 @@ export function getRegionAggregates(): RegionAggregate[] {
 
 export function getTopStates(n: number): StateAggregate[] {
     return regional.by_state.slice(0, n)
+}
+
+// ---------------------------------------------------------------------
+// Contexto para o Assistente (Henry) - espelha buildOsintContext em
+// lib/osint.ts, mas pra vendas/faturamento em vez de ficha tecnica.
+// ---------------------------------------------------------------------
+
+function stripAccents(text: string): string {
+    return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+}
+
+function norm(text: string): string {
+    return stripAccents(text).toLowerCase().trim()
+}
+
+function formatBRL(value: number | null): string {
+    if (value == null) return "sem estimativa"
+    return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+    }).format(value)
+}
+
+function formatUnits(value: number | null): string {
+    return value == null ? "sem dado" : new Intl.NumberFormat("pt-BR").format(value)
+}
+
+/** Acha marcas mencionadas na pergunta (substring, sem acento/caixa) -
+ * mesma logica de deteccao usada em buildOsintContext pra veiculo/marca. */
+function findMentionedBrands(query: string): BrandAggregate[] {
+    const q = norm(query)
+    return data.brands.filter((b) => q.includes(norm(b.brand)))
+}
+
+export function getMonthlySalesForBrand(brand: string): MonthlyBrandRow | undefined {
+    const b = norm(brand)
+    return monthly.by_brand.find((r) => norm(r.brand) === b)
+}
+
+export function getMonthlySalesForModel(brand: string, model: string): MonthlyModelRow | undefined {
+    const b = norm(brand)
+    const m = norm(model)
+    return monthly.by_model.find((r) => norm(r.brand) === b && norm(r.model) === m)
+}
+
+function monthlyLineForBrand(brand: string, mentionedModel: string | null): string | null {
+    const brandRow = getMonthlySalesForBrand(brand)
+    if (!brandRow || brandRow.units == null) return null
+
+    const agreementNote =
+        brandRow.sources_agree === false
+            ? " (⚠ fontes divergem entre si nesse mês - checar antes de repassar)"
+            : brandRow.n_sources > 1
+                ? " (média entre fontes, que bateram de perto)"
+                : ""
+
+    const sourceNames = MONTHLY_SALES_META.sources.map((s) => s.name).join(" + ")
+    let line =
+        `${brand} (vendas Brasil, ${MONTHLY_SALES_META.label}, fonte ${sourceNames}): ` +
+        `${formatUnits(brandRow.units)} unidades NESSE MÊS ISOLADO (não é acumulado do ano)${agreementNote}.`
+
+    if (mentionedModel) {
+        const modelRow = getMonthlySalesForModel(brand, mentionedModel)
+        if (modelRow && modelRow.units != null) {
+            line += `\n  Modelo ${modelRow.model} em ${MONTHLY_SALES_META.label}: ${formatUnits(modelRow.units)} unidades.`
+        }
+    }
+
+    return line
+}
+
+/** Monta o bloco de vendas/faturamento pra injetar no contexto do
+ * assistente. Retorna "" (vazio) se nenhuma marca da pergunta bater com
+ * o ranking coletado - nesse caso o chamador (Assistant) sabe que precisa
+ * cair pro fallback de busca web. */
+export function buildSalesContext(query: string): string {
+    const brands = findMentionedBrands(query)
+    if (brands.length === 0) return ""
+
+    const lines = brands.map((b) => {
+        const model = data.items.find(
+            (i) => i.brand === b.brand && norm(query).includes(norm(i.model))
+        )
+
+        const brandLine =
+            `${b.brand} (vendas Brasil, Fenabrave): ${formatUnits(b.units_previous)} unidades em ` +
+            `${data.meta.period_previous}; ${formatUnits(b.units_current)} unidades em ` +
+            `${data.meta.period_current}. Faturamento ESTIMADO (preço médio FIPE × unidades, não é ` +
+            `o faturamento contábil real): ${formatBRL(b.revenue_previous_estimate)} em ` +
+            `${data.meta.period_previous}; ${formatBRL(b.revenue_current_estimate)} em ${data.meta.period_current}.`
+
+        const modelLine = model
+            ? `\n  Modelo ${model.model}: ${formatUnits(model.units_previous)} unidades em ` +
+              `${data.meta.period_previous}; ${formatUnits(model.units_current)} unidades em ` +
+              `${data.meta.period_current}` +
+              (model.price_avg_estimate != null
+                  ? ` (preço médio FIPE estimado: ${formatBRL(model.price_avg_estimate)}).`
+                  : ".")
+            : ""
+
+        const monthlyLine = monthlyLineForBrand(b.brand, model?.model ?? null)
+
+        return brandLine + modelLine + (monthlyLine ? `\n${monthlyLine}` : "")
+    })
+
+    return lines.join("\n")
 }

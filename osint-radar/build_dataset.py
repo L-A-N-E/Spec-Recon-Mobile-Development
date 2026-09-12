@@ -36,7 +36,7 @@ CATALOG = [
     {"brand": "Tesla", "model": "Model 3"},
     {"brand": "BYD", "model": "Seal"},
     {"brand": "Toyota", "model": "bZ4X"},
-    {"brand": "GM", "model": "Chevrolet Equinox EV", "search_query": "Chevrolet Equinox EV"},
+    {"brand": "Chevrolet", "model": "Equinox EV", "search_query": "Chevrolet Equinox EV"},
     {"brand": "Rivian", "model": "R1T"},
     {"brand": "Hyundai", "model": "Ioniq 5"},
     {"brand": "Kia", "model": "EV6"},
@@ -97,8 +97,8 @@ CATALOG = [
     {"brand": "Toyota", "model": "Mirai"},
     {"brand": "Toyota", "model": "C-HR"},
 
-    {"brand": "GM", "model": "Cadillac Optiq", "search_query": "Cadillac Optiq"},
-    {"brand": "GM", "model": "Buick Envista", "search_query": "Buick Envista"},
+    {"brand": "Cadillac", "model": "Optiq", "search_query": "Cadillac Optiq"},
+    {"brand": "Buick", "model": "Envista", "search_query": "Buick Envista"},
 
     {"brand": "Rivian", "model": "R1S"},
     {"brand": "Rivian", "model": "R2"},
@@ -233,6 +233,135 @@ CATALOG = [
     {"brand": "Nissan", "model": "Versa"},
     {"brand": "Citroën", "model": "C3"},
     {"brand": "Peugeot", "model": "208"},
+
+    # --- mercado brasileiro completo (fase 2 - mais marcas/modelos) ---
+    # Objetivo: cobrir o grosso do que e vendido novo no Brasil hoje, nao
+    # so os top-sellers ja listados acima. Mesma logica de fonte (Wikipedia
+    # PT + sites .br) - EV Database ignora tudo que nao for eletrico.
+    {"brand": "Chevrolet", "model": "Spin"},
+    {"brand": "Chevrolet", "model": "Montana"},
+    {"brand": "Chevrolet", "model": "S10"},
+    {"brand": "Chevrolet", "model": "Trailblazer"},
+
+    {"brand": "Fiat", "model": "Toro"},
+    {"brand": "Fiat", "model": "Fastback"},
+    {"brand": "Fiat", "model": "Cronos"},
+    {"brand": "Fiat", "model": "Fiorino"},
+    {"brand": "Fiat", "model": "Titano"},
+
+    {"brand": "Volkswagen", "model": "Polo Track", "search_query": "Volkswagen Polo Track"},
+    {"brand": "Volkswagen", "model": "Virtus"},
+    {"brand": "Volkswagen", "model": "Taos"},
+    {"brand": "Volkswagen", "model": "Tera", "search_query": "Volkswagen Tera"},
+    {"brand": "Volkswagen", "model": "Saveiro"},
+    {"brand": "Volkswagen", "model": "Amarok"},
+
+    {"brand": "Hyundai", "model": "HB20S"},
+    {"brand": "Hyundai", "model": "Tucson"},
+    {"brand": "Hyundai", "model": "Santa Fe"},
+    {"brand": "Hyundai", "model": "Kona"},
+
+    {"brand": "Renault", "model": "Oroch"},
+    {"brand": "Renault", "model": "Captur"},
+    {"brand": "Renault", "model": "Kardian"},
+    {"brand": "Renault", "model": "Master"},
+
+    {"brand": "Toyota", "model": "Yaris Cross"},
+    {"brand": "Toyota", "model": "Hilux"},
+    {"brand": "Toyota", "model": "SW4"},
+    {"brand": "Toyota", "model": "RAV4"},
+
+    {"brand": "Honda", "model": "City Hatchback", "search_query": "Honda City Hatchback"},
+    {"brand": "Honda", "model": "ZR-V"},
+    {"brand": "Honda", "model": "CR-V"},
+
+    {"brand": "Nissan", "model": "Frontier"},
+
+    {"brand": "Jeep", "model": "Commander"},
+    {"brand": "Jeep", "model": "Wrangler"},
+    {"brand": "Jeep", "model": "Gladiator"},
+
+    {"brand": "Peugeot", "model": "2008"},
+    {"brand": "Peugeot", "model": "3008"},
+    {"brand": "Peugeot", "model": "408"},
+    {"brand": "Peugeot", "model": "Partner"},
+
+    {"brand": "Citroën", "model": "C4 Cactus", "search_query": "Citroën C4 Cactus"},
+    {"brand": "Citroën", "model": "Basalt", "search_query": "Citroën Basalt"},
+
+    {"brand": "Mitsubishi", "model": "L200 Triton", "search_query": "Mitsubishi L200 Triton"},
+    {"brand": "Mitsubishi", "model": "Pajero Sport"},
+    {"brand": "Mitsubishi", "model": "Eclipse Cross"},
+
+    {"brand": "Mazda", "model": "Mazda2", "search_query": "Mazda 2 Brasil"},
+    {"brand": "Mazda", "model": "Mazda3", "search_query": "Mazda 3 Brasil"},
+    {"brand": "Mazda", "model": "CX-30"},
+    {"brand": "Mazda", "model": "CX-5"},
+
+    {"brand": "Subaru", "model": "Forester"},
+
+    # GWM (Great Wall Motors / Haval / ORA) - chegada recente ao Brasil
+    {"brand": "GWM", "model": "Haval H6"},
+    {"brand": "GWM", "model": "Haval H6 GT", "search_query": "GWM Haval H6 GT"},
+    {"brand": "GWM", "model": "Poer"},
+    {"brand": "GWM", "model": "ORA 03", "search_query": "GWM ORA 03"},
+    {"brand": "GWM", "model": "Tank 300"},
+
+    {"brand": "Kia", "model": "Sportage"},
+    {"brand": "Kia", "model": "Niro"},
+    {"brand": "Kia", "model": "Stonic"},
+    {"brand": "Kia", "model": "EV5", "search_query": "Kia EV5"},
+
+    # Chery / CAOA Chery
+    {"brand": "Chery", "model": "Tiggo 5x", "search_query": "CAOA Chery Tiggo 5x"},
+    {"brand": "Chery", "model": "Tiggo 7", "search_query": "CAOA Chery Tiggo 7"},
+    {"brand": "Chery", "model": "Tiggo 8", "search_query": "CAOA Chery Tiggo 8"},
+    {"brand": "Chery", "model": "Arrizo 6", "search_query": "CAOA Chery Arrizo 6"},
+
+    {"brand": "JAC", "model": "T40"},
+    {"brand": "JAC", "model": "T50"},
+    {"brand": "JAC", "model": "e-JS1", "search_query": "JAC e-JS1"},
+
+    {"brand": "Land Rover", "model": "Range Rover Evoque", "search_query": "Land Rover Range Rover Evoque"},
+    {"brand": "Land Rover", "model": "Discovery Sport"},
+    {"brand": "Land Rover", "model": "Range Rover Velar", "search_query": "Land Rover Range Rover Velar"},
+
+    {"brand": "Volvo", "model": "XC60"},
+    {"brand": "Volvo", "model": "XC90"},
+    {"brand": "Volvo", "model": "S60"},
+
+    {"brand": "BMW", "model": "X1"},
+    {"brand": "BMW", "model": "X3"},
+    {"brand": "BMW", "model": "X5"},
+    {"brand": "BMW", "model": "Série 3", "search_query": "BMW Serie 3"},
+    {"brand": "BMW", "model": "Série 5", "search_query": "BMW Serie 5"},
+
+    {"brand": "Mercedes-Benz", "model": "GLA"},
+    {"brand": "Mercedes-Benz", "model": "GLC"},
+    {"brand": "Mercedes-Benz", "model": "GLE"},
+    {"brand": "Mercedes-Benz", "model": "Classe C", "search_query": "Mercedes-Benz Classe C"},
+    {"brand": "Mercedes-Benz", "model": "Classe A", "search_query": "Mercedes-Benz Classe A"},
+    {"brand": "Mercedes-Benz", "model": "EQB"},
+
+    {"brand": "Audi", "model": "Q3"},
+    {"brand": "Audi", "model": "Q5"},
+    {"brand": "Audi", "model": "Q7"},
+    {"brand": "Audi", "model": "A3"},
+    {"brand": "Audi", "model": "A4"},
+
+    {"brand": "Porsche", "model": "Cayenne"},
+    {"brand": "Porsche", "model": "911"},
+
+    {"brand": "Mini", "model": "Cooper"},
+
+    {"brand": "RAM", "model": "1500", "search_query": "RAM 1500 Brasil"},
+    {"brand": "RAM", "model": "2500", "search_query": "RAM 2500 Brasil"},
+    {"brand": "RAM", "model": "Rampage"},
+
+    {"brand": "BYD", "model": "Dolphin Mini", "search_query": "BYD Dolphin Mini"},
+    {"brand": "BYD", "model": "Song Plus", "search_query": "BYD Song Plus"},
+    {"brand": "BYD", "model": "Han"},
+    {"brand": "BYD", "model": "King"},
 ]
 
 # seed fixa so pra distribuir as datas de "descoberta" de forma deterministica
@@ -255,9 +384,16 @@ def _clean(text: str) -> str:
 
 
 def _extract(text: str, unit_patterns: list[tuple[str, str]]) -> tuple[float, str] | None:
+    """Cada `pattern` fica entre parenteses NAO-capturadores (?:...) antes de
+    virar regex: sem isso, um pattern com alternancia interna (ex.: torque
+    "kgfm|kgf\\.?\\s*m") quebra o grupo do NUMERO por causa da baixa
+    precedencia do `|` - a regex final virava efetivamente 2 alternativas
+    soltas, e a 2a (sem numero) matchava sozinha e retornava m.group(1) =
+    None, derrubando o processo inteiro (visto na pratica: run de 239
+    veiculos crashou no meio ao bater um "X kgf.m" de torque)."""
     text = _clean(text)
     for pattern, unit in unit_patterns:
-        m = re.search(NUM + r"\s*" + pattern, text, re.IGNORECASE)
+        m = re.search(NUM + r"\s*(?:" + pattern + ")", text, re.IGNORECASE)
         if m:
             return _to_float(m.group(1)), unit
     return None
@@ -454,7 +590,11 @@ def scan_target(brand: str, model: str, search_query: str | None = None) -> dict
     # Database nao cobre (e' so eletricos) e que a Wikipedia em ingles
     # documenta mal ou nao documenta.
     merged_specs: dict[str, str] = {}
-    for name in ("Wikipedia", "EV Database", "iCarros", "Webmotors", "Quatro Rodas", "UOL Carros", "Autoesporte"):
+    for name in (
+        "Wikipedia", "EV Database", "iCarros", "Webmotors", "Quatro Rodas",
+        "UOL Carros", "Autoesporte", "Motor1 Brasil", "CarrosNaWeb",
+        "FlatOut", "Best Cars", "AutoPapo", "G1", "R7", "Band",
+    ):
         merged_specs.update(per_source.get(name, {}).get("specs", {}))
 
     start_year, end_year = parse_production_years(merged_specs)
@@ -504,6 +644,30 @@ def attach_discovery_metadata(rows: list[dict]) -> list[dict]:
     return out
 
 
+FRONTEND_DISCOVERIES_PATH = FRONTEND_DATA_DIR / "osintDiscoveries.json"
+FRONTEND_SPECS_PATH = FRONTEND_DATA_DIR / "osintVehicleSpecs.json"
+
+CHECKPOINT_EVERY = 10  # grava os 2 JSON a cada N veiculos, nao so no final
+
+
+def _save_outputs(all_rows: list[dict], spec_rows: list[dict]) -> list[dict]:
+    """Grava os 2 JSON do frontend com o progresso ATUAL (nao espera o
+    catalogo inteiro terminar). Com 239 veiculos x ate 11 fontes, uma
+    rodada completa pode levar horas - sem checkpoint, matar o processo
+    (ou a maquina reiniciar) no meio do caminho perderia 100% do trabalho
+    feito ate ali. Chamado a cada CHECKPOINT_EVERY veiculos e no final."""
+    discoveries = attach_discovery_metadata(all_rows)
+
+    FRONTEND_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    FRONTEND_DISCOVERIES_PATH.write_text(
+        json.dumps(discoveries, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    FRONTEND_SPECS_PATH.write_text(
+        json.dumps(spec_rows, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return discoveries
+
+
 def main() -> None:
     all_rows: list[dict] = []
     spec_rows: list[dict] = []
@@ -511,26 +675,29 @@ def main() -> None:
     for i, entry in enumerate(CATALOG):
         if i > 0:
             time.sleep(1)  # politeness delay entre alvos
-        result = scan_target(entry["brand"], entry["model"], entry.get("search_query"))
+
+        try:
+            result = scan_target(entry["brand"], entry["model"], entry.get("search_query"))
+        except Exception as exc:  # noqa: BLE001 - PoC: 1 veiculo com parser
+            # quebrando (ex.: unidade num formato novo) nao pode derrubar os
+            # outros ~238 - loga bem alto e segue pro proximo. Confirmado na
+            # pratica: um bug de regex no parser de torque derrubou uma rodada
+            # inteira no meio do catalogo antes deste try/except existir.
+            print(f"  [!!!] ERRO ao coletar {entry['brand']} {entry['model']}: {exc!r} - pulando este veiculo")
+            continue
+
         all_rows.extend(result["rows"])
         spec_rows.append(result["spec_row"])
 
-    discoveries = attach_discovery_metadata(all_rows)
+        done = i + 1
+        if done % CHECKPOINT_EVERY == 0 or done == len(CATALOG):
+            _save_outputs(all_rows, spec_rows)
+            print(f"[*] checkpoint {done}/{len(CATALOG)} -> {FRONTEND_DISCOVERIES_PATH.name} / {FRONTEND_SPECS_PATH.name}")
 
-    FRONTEND_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    discoveries = _save_outputs(all_rows, spec_rows)
 
-    discoveries_path = FRONTEND_DATA_DIR / "osintDiscoveries.json"
-    specs_path = FRONTEND_DATA_DIR / "osintVehicleSpecs.json"
-
-    discoveries_path.write_text(
-        json.dumps(discoveries, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    specs_path.write_text(
-        json.dumps(spec_rows, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-
-    print(f"\n[*] {len(discoveries)} descobertas -> {discoveries_path}")
-    print(f"[*] {len(spec_rows)} veiculos (specs) -> {specs_path}")
+    print(f"\n[*] {len(discoveries)} descobertas -> {FRONTEND_DISCOVERIES_PATH}")
+    print(f"[*] {len(spec_rows)} veiculos (specs) -> {FRONTEND_SPECS_PATH}")
 
     missing = [
         r["target"]

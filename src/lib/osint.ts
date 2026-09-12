@@ -44,14 +44,23 @@ const discoveries = rawDiscoveries as OsintDiscovery[]
 const vehicleSpecs = rawVehicleSpecs as OsintVehicleSpec[]
 
 // ---------------------------------------------------------------------
-// Fontes de coleta - mesma classificacao usada na tela Radar. Wikipedia,
-// EV Database e iCarros sao "live" (de fato usadas no scan e com parser
-// validado contra HTML real); Webmotors/Quatro Rodas/UOL Carros/
-// Autoesporte foram cadastradas no osint_radar.py mas ainda usam
-// localizacao via DuckDuckGo sem validacao completa (o DDG passou a
-// bloquear com CAPTCHA depois de poucas chamadas em sequencia) - ficam
-// como "Em breve" ate isso ser confirmado. O resto fica listado/
-// classificado para o usuario ver o que vem a seguir.
+// Fontes de coleta - mesma classificacao usada na tela Radar. TODAS ficam
+// selecionaveis na busca (o filtro `enabledSources` so restringe QUAIS
+// linhas ja coletadas aparecem - nao controla se o Python vai tentar
+// coletar, isso e' o SOURCES do osint_radar.py). O campo `live` aqui e'
+// so informativo (badge "Ativo" vs "Beta" na UI): Wikipedia, EV Database
+// e iCarros tem parser validado contra HTML real e retornam dado hoje;
+// Webmotors, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut,
+// Best Cars e AutoPapo estao cadastradas no osint_radar.py (localizacao
+// via DuckDuckGo, parser generico best-effort) mas sem confirmacao campo
+// a campo - o DDG bloqueia com CAPTCHA (ou some de vez, dependendo da
+// rede) depois de poucas chamadas em sequencia. Webmotors especificamente
+// ja teve bloqueio anti-bot CONFIRMADO (pagina "Access denied"). Quatro
+// Rodas foi removida de vez do osint_radar.py (virou revista digital
+// fechada, sem ficha tecnica raspavel). Patentes/foruns/imprensa/
+// reguladores/social no fim da lista sao roadmap puro - sem locate/parse
+// no Python ainda, entao selecionar so fica sem efeito (nenhuma linha
+// tem esse `source`).
 // ---------------------------------------------------------------------
 
 export type SourceMeta = {
@@ -92,17 +101,9 @@ export const OSINT_SOURCES: SourceMeta[] = [
         id: "webmotors",
         label: "Webmotors",
         classification: "Ficha técnica (BR)",
-        reliability: 3,
+        reliability: 1,
         live: false,
-        note: "Em breve — localização via busca ainda não confiável.",
-    },
-    {
-        id: "quatro_rodas",
-        label: "Quatro Rodas",
-        classification: "Imprensa / Ficha técnica (BR)",
-        reliability: 3,
-        live: false,
-        note: "Em breve — cobertura ainda não validada.",
+        note: "Bloqueio anti-bot confirmado — indisponível sem navegador headless.",
     },
     {
         id: "uol_carros",
@@ -110,7 +111,7 @@ export const OSINT_SOURCES: SourceMeta[] = [
         classification: "Imprensa / Ficha técnica (BR)",
         reliability: 3,
         live: false,
-        note: "Em breve — cobertura ainda não validada.",
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
     },
     {
         id: "autoesporte",
@@ -118,7 +119,71 @@ export const OSINT_SOURCES: SourceMeta[] = [
         classification: "Imprensa / Ficha técnica (BR)",
         reliability: 3,
         live: false,
-        note: "Em breve — cobertura ainda não validada.",
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
+    },
+    {
+        id: "motor1_br",
+        label: "Motor1 Brasil",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 3,
+        live: false,
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
+    },
+    {
+        id: "carrosnaweb",
+        label: "CarrosNaWeb",
+        classification: "Ficha técnica (BR)",
+        reliability: 2,
+        live: false,
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
+    },
+    {
+        id: "flatout",
+        label: "FlatOut",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 2,
+        live: false,
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
+    },
+    {
+        id: "best_cars",
+        label: "Best Cars",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 2,
+        live: false,
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
+    },
+    {
+        id: "autopapo",
+        label: "AutoPapo",
+        classification: "Imprensa / Ficha técnica (BR)",
+        reliability: 2,
+        live: false,
+        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
+    },
+    {
+        id: "g1",
+        label: "G1",
+        classification: "Grande imprensa (BR)",
+        reliability: 4,
+        live: false,
+        note: "Fonte confiável (registrada em trustedSources.ts) — cobertura de dados ainda não validada.",
+    },
+    {
+        id: "r7",
+        label: "R7 (Record)",
+        classification: "Grande imprensa (BR)",
+        reliability: 4,
+        live: false,
+        note: "Fonte confiável (registrada em trustedSources.ts) — cobertura de dados ainda não validada.",
+    },
+    {
+        id: "band",
+        label: "Band",
+        classification: "Grande imprensa (BR)",
+        reliability: 4,
+        live: false,
+        note: "Fonte confiável (registrada em trustedSources.ts) — cobertura de dados ainda não validada.",
     },
     {
         id: "patents",
@@ -191,14 +256,6 @@ export const TARGETS = (() => {
 export function getModelsForTarget(target: string): OsintVehicleSpec[] {
     return vehicleSpecs.filter((v) => v.target === target)
 }
-
-export const TIME_WINDOWS = [
-    { id: "7d", label: "7d", days: 7 },
-    { id: "30d", label: "30d", days: 30 },
-    { id: "90d", label: "90d", days: 90 },
-] as const
-
-export type TimeWindowId = (typeof TIME_WINDOWS)[number]["id"]
 
 // ---------------------------------------------------------------------
 // Normalizacao / keyword matching (espelha osint_radar.py em Python)
@@ -436,10 +493,18 @@ export function buildOsintContext(query: string, maxRows = 12): string {
             ? mentionedVehicles
             : mentionedTargets.flatMap((t) => getModelsForTarget(t.target))
 
+    // Sem marca/modelo citado, so faz sentido puxar descobertas se alguma
+    // REALMENTE bate por palavra-chave (`keywordMatch`) - sem essa trava,
+    // getDiscoveries({keywords}) devolve as top-N descobertas por confianca
+    // do dataset INTEIRO (keywords so afeta ordenacao, nao filtra), o que
+    // injetava ruido nao relacionado a pergunta (ex.: pergunta sobre um
+    // assunto fora do catalogo puxava specs aleatorias de outro carro).
     const rows =
         relevantVehicles.length > 0
             ? relevantVehicles.flatMap((v) => getDiscoveries({ target: v.target, model: v.model, keywords }).slice(0, maxRows))
-            : getDiscoveries({ keywords }).slice(0, maxRows)
+            : keywords.length > 0
+                ? getDiscoveries({ keywords }).filter((r) => r.keywordMatch).slice(0, maxRows)
+                : []
 
     const specLines = relevantVehicles.map(
         (v) =>
@@ -451,5 +516,10 @@ export function buildOsintContext(query: string, maxRows = 12): string {
     const discoveryLines = rows.map((r) => `[${r.target} ${r.model} · ${r.source}] ${r.field}: ${r.value}`)
 
     const context = [...specLines, ...discoveryLines].join("\n")
-    return context || "(nenhum dado relevante encontrado no dataset OSINT para essa pergunta)"
+    return context || NO_OSINT_CONTEXT
 }
+
+/** Sentinela devolvida por buildOsintContext quando nada bate com a
+ * pergunta - o Assistant (Henry) usa isso pra saber quando cair pro
+ * fallback de busca web (ver AGENTS.md, regra 3). */
+export const NO_OSINT_CONTEXT = "(nenhum dado relevante encontrado no dataset OSINT para essa pergunta)"

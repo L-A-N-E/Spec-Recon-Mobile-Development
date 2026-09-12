@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import Logo_Lane from "../../../assets/logo-branca.png"
+import LogoSpecRecon from "../../../assets/logo_spec_recon_branca.png"
 
 function Footer() {
     return (
@@ -19,7 +20,11 @@ function Footer() {
                         <div className="flex items-center gap-4">
 
                             <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/3 backdrop-blur flex items-center justify-center shadow-lg">
-                                <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-cyan-400" />
+                                <img
+                                    src={LogoSpecRecon}
+                                    alt="Spec Recon"
+                                    className="w-7 h-7 object-contain"
+                                />
                             </div>
 
                             <div>

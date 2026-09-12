@@ -150,7 +150,7 @@ function Signup() {
             phone: formData.phone,
         })
 
-        navigate("/dashboard")
+        navigate("/radar")
     }
 
     return (

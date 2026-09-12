@@ -681,7 +681,9 @@ function RadarPage() {
 
                     ) : (
 
-                        <div className="divide-y divide-white/5">
+                        <div className="relative">
+
+                            <div className="divide-y divide-white/5 max-h-[70vh] overflow-y-auto">
 
                             {discoveries.map((item) => (
 
@@ -816,6 +818,23 @@ function RadarPage() {
                                     </div>
                                 </div>
                             ))}
+                            </div>
+
+                            {/* Blur indicando que ha mais itens pra rolar - sem escurecer,
+                                so desfoca (os itens continuam visiveis por baixo) */}
+                            <div
+                                className="
+                                    pointer-events-none
+                                    absolute
+                                    inset-x-0
+                                    bottom-0
+                                    h-20
+                                    rounded-b-3xl
+                                    backdrop-blur-md
+                                    [mask-image:linear-gradient(to_top,black,transparent)]
+                                    [-webkit-mask-image:linear-gradient(to_top,black,transparent)]
+                                "
+                            />
                         </div>
                     )}
                 </div>

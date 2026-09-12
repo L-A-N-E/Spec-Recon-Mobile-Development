@@ -14,6 +14,7 @@ import { Link } from "react-router-dom"
 import Button from "../../components/public/Button"
 import { useEffect } from "react"
 import { useLocation } from "react-router-dom"
+import { useAuth } from "../../context/AuthContext"
 
 const modules = [
     {
@@ -52,6 +53,7 @@ const modules = [
 function Home() {
 
     const location = useLocation()
+    const { isAuthenticated } = useAuth()
 
     useEffect(() => {
         if (location.hash) {
@@ -103,18 +105,29 @@ function Home() {
 
                         <div className="mt-10 flex flex-wrap gap-4">
 
-                            <Link to="/sign-up">
-                                <Button variant="primary">
-                                    Cadastro Corporativo
-                                    <ArrowRight className="w-4 h-4" />
-                                </Button>
-                            </Link>
+                            {isAuthenticated ? (
+                                <Link to="/radar">
+                                    <Button variant="primary">
+                                        Acessar Plataforma
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link to="/sign-up">
+                                        <Button variant="primary">
+                                            Cadastro Corporativo
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Button>
+                                    </Link>
 
-                            <Link to="/login">
-                                <Button variant="outline">
-                                    Entrar
-                                </Button>
-                            </Link>
+                                    <Link to="/login">
+                                        <Button variant="outline">
+                                            Entrar
+                                        </Button>
+                                    </Link>
+                                </>
+                            )}
                         </div>
 
                         {/* Stats */}

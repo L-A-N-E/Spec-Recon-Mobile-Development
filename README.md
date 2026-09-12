@@ -20,7 +20,11 @@
     <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white">
     <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white">
     <img src="https://img.shields.io/badge/TailwindCSS-0F172A?style=for-the-badge&logo=tailwindcss">
+    <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
+    <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white">
 </p>
+
+> **Nota:** este arquivo é uma cópia de trabalho do `README.md`, com as novidades implementadas ao longo do desenvolvimento (Radar com dados reais, Henry rodando localmente via Ollama, notícias/alertas ao vivo, exportação de dados). Sirva como preview antes de promover o conteúdo para o `README.md` oficial.
 
 ---
 
@@ -32,6 +36,11 @@
 - [🏗 Estrutura do Projeto](#-estrutura-do-projeto)
 - [⚙️ Instalação](#️-instalação)
 - [▶️ Execução](#️-execução)
+- [🛰 Pipeline OSINT (osint-radar/)](#-pipeline-osint-osint-radar)
+- [🧠 Assistente Henry — IA local via Ollama](#-assistente-henry--ia-local-via-ollama)
+- [🦙 Como instalar e rodar o Ollama no seu PC](#-como-instalar-e-rodar-o-ollama-no-seu-pc)
+- [📰 Notícias da Semana e Central de Alertas](#-notícias-da-semana-e-central-de-alertas)
+- [🔐 Confiabilidade de Fontes](#-confiabilidade-de-fontes)
 - [🧪 Futuras Implementações](#-futuras-implementações)
 - [📄 Licença](#-licença)
 
@@ -58,10 +67,13 @@ A solução permite que equipes estratégicas tenham acesso rápido e estruturad
 
 ## ⚡ Principais Funcionalidades
 
-- Radar de Inteligência com monitoramento contínuo;
-- Dashboard estratégico com métricas e insights;
+- Radar de Inteligência com **dados reais** coletados por pipeline próprio em Python (ficha técnica + vendas Fenabrave);
+- Dashboard estratégico com métricas, insights e **notícias do setor ao vivo**;
+- Central de Alertas **dinâmica**, calculada a partir dos mesmos dados do Radar/Dashboard;
 - Grid competitivo com comparação técnica automatizada;
-- Assistente virtual com Inteligência Artificial;
+- Assistente virtual (**Henry**) com IA rodando localmente via **Ollama**, respondendo com base nos dados coletados e citando as fontes de cada resposta;
+- Sistema de verificação e aprendizado de fontes confiáveis;
+- Exportação de dados em CSV (ranking de vendas, faturamento por marca, vendas regionais);
 - Organização estruturada de dados automotivos;
 - Interface responsiva e moderna.
 
@@ -70,8 +82,8 @@ A solução permite que equipes estratégicas tenham acesso rápido e estruturad
 O projeto utiliza conceitos e tecnologias modernas como:
 
 - OSINT (Open Source Intelligence)
-- Inteligência Artificial
-- Automação de Coleta de Dados
+- Inteligência Artificial (local, via Ollama)
+- Automação de Coleta de Dados (web scraping em Python)
 - Business Intelligence
 - UX/UI Moderna
 - React
@@ -80,6 +92,7 @@ O projeto utiliza conceitos e tecnologias modernas como:
 - React Router DOM
 - Lucide React
 - Vite
+- Python (requests, BeautifulSoup4, lxml, pandas)
 
 ## 🎯 Proposta do Projeto
 
@@ -92,7 +105,8 @@ Mais do que uma plataforma visual, o Spec Recon busca transformar grandes volume
 ## 🌐 Landing Page Institucional
 - Interface moderna e responsiva;
 - Navegação suave entre seções;
-- Design futurista inspirado em plataformas enterprise.
+- Design futurista inspirado em plataformas enterprise;
+- Conteúdo condicional: usuário logado vê "Acessar Plataforma", visitante vê "Cadastro" e "Entrar".
 
 ## 🔐 Sistema de Autenticação
 - Login corporativo;
@@ -101,24 +115,34 @@ Mais do que uma plataforma visual, o Spec Recon busca transformar grandes volume
 - Rotas públicas e privadas.
 
 ## 📊 Dashboard Estratégico
-- Exibição de métricas;
+- Exibição de métricas com dados reais do pipeline OSINT/vendas;
 - Indicadores estratégicos;
-- Insights automatizados.
+- Insights automatizados;
+- Seção **"Notícias da Semana"**, buscada ao vivo em portais do setor automotivo;
+- Exportação de tabelas (ranking de vendas, faturamento por marca, vendas por estado/UF) em **CSV**.
 
 ## 🛰 Radar de Inteligência
-- Monitoramento de mercado;
-- Coleta automatizada de informações;
-- Rastreamento de tendências.
+- Monitoramento de mercado com dados reais coletados por scraping (11 fontes: Wikipedia, EV Database, iCarros, Webmotors, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut, AutoPapo, entre outras);
+- Coleta automatizada de fichas técnicas de 239 veículos, em 42 marcas;
+- Rastreamento de tendências e vendas (ranking Fenabrave via carrolens.com.br);
+- Rolagem com efeito de desfoque (blur) nas listas longas para melhorar a leitura.
 
 ## ⚔ Grid Comparativo
 - Comparação side-by-side;
-- Diferenças técnicas automatizadas;
+- Diferenças técnicas automatizadas, com specs numéricas normalizadas (potência, torque, autonomia, aceleração, velocidade máxima, peso, capacidade de reboque, capacidade de bateria);
 - Estrutura escalável para múltiplos veículos.
 
-## 🤖 Assistente Virtual
-- Interface conversacional;
-- Integração futura com IA;
-- Consulta inteligente de dados.
+## 🤖 Assistente Virtual — Henry
+- Interface conversacional, rodando 100% localmente via **Ollama** (sem custo de API, sem chave);
+- Responde com base nos dados reais coletados pelo Radar (ficha técnica + vendas/faturamento Fenabrave);
+- Quando o dado local não cobre a pergunta, faz busca na web (DuckDuckGo/Wikipedia) e avisa a fonte;
+- Confere qualquer link que o usuário enviar na conversa e aponta divergências com os dados locais;
+- Mostra sempre as **fontes consultadas** em cada resposta, com selo de "confiável" ou "não verificada";
+- Permite ao usuário "aprovar" manualmente uma fonte ainda não confiável (sistema de aprendizado, salvo no navegador).
+
+## 🔔 Central de Alertas
+- Alertas gerados dinamicamente a partir dos dados reais (quedas de coleta, marcas em alta/queda forte, sinais de alta confiança);
+- Inclui as principais notícias da semana, com link direto para a matéria original.
 
 ## 📱 Responsividade
 - Navegação mobile;
@@ -144,11 +168,22 @@ Mais do que uma plataforma visual, o Spec Recon busca transformar grandes volume
 - Microinterações
 - Animações suaves
 
+## Coleta de Dados / OSINT (Python)
+- `requests` + `BeautifulSoup4` + `lxml` para scraping e parsing de HTML;
+- `pandas` para consolidação e exportação dos dados coletados;
+- Scripts próprios (`osint-radar/`) que exportam JSON estático consumido pelo front-end (sem backend/API — snapshot gerado sob demanda).
+
+## Inteligência Artificial
+- **Ollama** rodando localmente (modelo `llama3.1:8b`) para o Assistente Henry;
+- `r.jina.ai` como leitor de página público (sem chave) para contornar bloqueio de CORS ao ler notícias e links enviados pelo usuário;
+- Sistema próprio de verificação/aprendizado de fontes confiáveis.
+
 ## Arquitetura
 - Componentização modular
 - Separação entre layouts públicos e privados
 - Estrutura escalável
 - Organização por módulos
+- Separação clara entre app (React/TS) e pipeline de coleta (Python), integrados via arquivos JSON estáticos
 
 ---
 
@@ -162,11 +197,38 @@ Mais do que uma plataforma visual, o Spec Recon busca transformar grandes volume
     │   ├── components/
     │   │   ├── public/
     │   │   └── private/
+    │   ├── context/
+    │   │   └── AuthContext.tsx
+    │   ├── lib/
+    │   │   ├── osint.ts          # leitura dos dados de ficha técnica (Radar/Grid/Dashboard)
+    │   │   ├── sales.ts          # leitura dos dados de vendas/faturamento
+    │   │   ├── news.ts           # busca ao vivo das notícias da semana
+    │   │   ├── alerts.ts         # central de alertas dinâmica
+    │   │   ├── webSearch.ts      # fallback de busca web do Henry
+    │   │   ├── sourceCheck.ts    # conferência de link enviado pelo usuário no Henry
+    │   │   └── trustedSources.ts # registro/aprendizado de fontes confiáveis
     │   ├── layout/
     │   ├── pages/
+    │   │   ├── Assistant/        # Henry (chat com IA local via Ollama)
+    │   │   ├── Dashboard/
+    │   │   ├── Radar/
+    │   │   └── Grid/
     │   ├── App.tsx
     │   ├── main.tsx
     │   └── style.css
+    ├── osint-radar/               # pipeline Python de coleta (OSINT + vendas)
+    │   ├── osint_radar.py         # motor de coleta de ficha técnica (biblioteca de fontes)
+    │   ├── build_dataset.py       # roda o catálogo inteiro (239 veículos) e exporta JSON
+    │   ├── collect_vehicle.py     # coleta incremental de 1 veículo (merge, não sobrescreve)
+    │   ├── sales_radar.py         # coleta ranking de vendas (Fenabrave via carrolens.com.br)
+    │   ├── build_sales.py         # junta ano atual + anterior, calcula variação e faturamento estimado
+    │   ├── press_sales.py         # ranking mensal via imprensa (Autoesporte/Quatro Rodas)
+    │   ├── build_monthly_sales.py # consolida o ranking mensal
+    │   ├── regional_sales.py      # coleta vendas por estado/região
+    │   ├── build_regional.py      # exporta vendas por estado/região
+    │   ├── fipe_prices.py         # estimativa de preço médio (Tabela FIPE)
+    │   ├── LOGICA_PIPELINE.md     # documentação detalhada do pipeline
+    │   └── requirements.txt
     ├── package.json
     ├── vite.config.ts
     └── README.md
@@ -182,6 +244,8 @@ Antes de começar, você precisará ter instalado:
 
 * Node.js
 * npm
+* Python 3.9+ (apenas se for rodar/atualizar o pipeline de coleta em `osint-radar/`)
+* [Ollama](https://ollama.com) (apenas se for usar o Assistente Henry — veja a seção [🦙 Como instalar e rodar o Ollama no seu PC](#-como-instalar-e-rodar-o-ollama-no-seu-pc))
 
 ---
 
@@ -201,10 +265,23 @@ cd Spec-Recon-Mobile-Development
 
 ---
 
-## Instale as dependências
+## Instale as dependências do front-end
 
 ```bash
 npm install
+```
+
+---
+
+## (Opcional) Instale as dependências do pipeline OSINT
+
+Só necessário se você for rodar/atualizar a coleta de dados (Radar/Grid/Dashboard já vêm com um snapshot pronto em `src/data/`):
+
+```bash
+cd osint-radar
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
 ---
@@ -232,6 +309,179 @@ npm run build
 ```bash
 npm run preview
 ```
+
+---
+
+## Atualizando os dados do Radar/Grid/Dashboard (opcional)
+
+Com o ambiente Python ativado (`source osint-radar/.venv/bin/activate`), a partir da pasta `osint-radar/`:
+
+```bash
+# Ficha técnica — roda o catálogo inteiro (239 veículos), sobrescreve os JSON
+python build_dataset.py
+
+# Ficha técnica — só 1 veículo (mais rápido, faz merge em vez de sobrescrever)
+python collect_vehicle.py "Volkswagen" "T-Cross"
+
+# Vendas (ranking Fenabrave, acumulado do ano)
+python build_sales.py
+
+# Vendas mensais (imprensa)
+python build_monthly_sales.py
+
+# Vendas por estado/região
+python build_regional.py
+```
+
+> ⚠️ O scraping das fontes brasileiras usa busca via DuckDuckGo, que pode bloquear temporariamente (CAPTCHA) após muitas chamadas seguidas — isso é detectado e avisado no console, não falha silenciosamente. Prefira rodar de uma rede residencial/doméstica. Detalhes completos em [`osint-radar/LOGICA_PIPELINE.md`](osint-radar/LOGICA_PIPELINE.md).
+
+---
+
+# 🛰 Pipeline OSINT (osint-radar/)
+
+O Radar, o Grid e o Dashboard são alimentados por um pipeline próprio em Python que roda offline/manualmente e exporta **JSON estático** para o front-end consumir — não existe backend/API, é um snapshot atualizado sob demanda.
+
+Existem duas trilhas de dados independentes:
+
+```
+Trilha 1: FICHA TÉCNICA (specs de cada veículo)
+  osint_radar.py  →  funções de coleta/parse por fonte (11 fontes registradas)
+        ↓
+  build_dataset.py  →  roda o catálogo inteiro (239 veículos, 42 marcas)
+        ↓ ou, para 1 veículo só
+  collect_vehicle.py  →  roda 1 veículo e faz merge incremental
+        ↓
+  src/data/osintDiscoveries.json + osintVehicleSpecs.json
+
+Trilha 2: VENDAS (ranking de emplacamentos por modelo)
+  sales_radar.py  →  ranking anual (Fenabrave, via carrolens.com.br)
+  press_sales.py  →  ranking mensal (Autoesporte / Quatro Rodas)
+  regional_sales.py → vendas por estado/região (fenabrave.online)
+        ↓
+  build_sales.py / build_monthly_sales.py / build_regional.py
+        ↓
+  src/data/salesRankings.json + salesMonthly.json + salesByRegion.json
+```
+
+Pontos importantes:
+
+- **Fontes de ficha técnica:** Wikipedia (PT/EN) e EV Database usam API/sitemap próprios (estáveis); os sites brasileiros (iCarros, Webmotors, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut, AutoPapo) são localizados via busca no DuckDuckGo, o ponto mais frágil do pipeline (sujeito a bloqueio temporário).
+- **Faturamento por marca** é sempre uma **estimativa** (preço médio da Tabela FIPE × unidades vendidas) — não é o faturamento contábil real, e isso é comunicado explicitamente nos dados exportados.
+- **Ranking mensal x anual:** `salesRankings.json` é o acumulado do ano; `salesMonthly.json` é o recorte de um mês específico coletado via imprensa — são trilhas complementares.
+- Scripts incrementais (`collect_vehicle.py`) sempre fazem **merge**, nunca sobrescrevem a base inteira; só os scripts de catálogo completo (`build_dataset.py`, `build_sales.py`) reconstroem os JSON do zero.
+
+Para o detalhamento completo de cada script (regras de parsing, normalização de unidades, limitações conhecidas), veja [`osint-radar/LOGICA_PIPELINE.md`](osint-radar/LOGICA_PIPELINE.md).
+
+---
+
+# 🧠 Assistente Henry — IA local via Ollama
+
+O **Henry** (nome em homenagem a Henry Ford) é o assistente virtual do Spec Recon. Diferente de um chatbot genérico, ele:
+
+1. **Prioriza dados locais** — antes de tudo, verifica se a pergunta é respondida pelos dados coletados pelo Radar (`osint.ts`) ou pelas vendas/faturamento (`sales.ts`);
+2. **Cai para busca web** (`webSearch.ts`, DuckDuckGo/Wikipedia) somente quando o dado local não cobre a pergunta, e sempre avisa qual foi a fonte usada;
+3. **Confere links enviados pelo usuário** (`sourceCheck.ts`) — sempre que a mensagem contém uma URL, o Henry busca o conteúdo daquela página (via `r.jina.ai`, que contorna bloqueio de CORS) e compara com os dados que já tem, apontando qualquer divergência de números/datas/especificações;
+4. **Mostra as fontes de cada resposta** — toda resposta que usa algum dado (local, busca web ou link do usuário) exibe as fontes consultadas, com selo de "confiável" ✅ ou "não verificada" ⚠️;
+5. **Aprende com o usuário** — uma fonte não verificada pode ser aprovada manualmente pelo botão "Confiar nesta fonte"; essa decisão fica salva no navegador (`trustedSources.ts`) e nunca acontece automaticamente a partir do conteúdo de uma busca (evita que uma fonte maliciosa se autodeclare confiável).
+
+O modelo de linguagem roda **100% local**, via **Ollama**, sem custo de API e sem enviar dados para serviços de terceiros — só precisa do Ollama ativo na máquina de quem está usando a página.
+
+---
+
+# 🦙 Como instalar e rodar o Ollama no seu PC
+
+O chat do Henry (`/assistant`) só funciona com o [Ollama](https://ollama.com) rodando localmente. Siga o passo a passo abaixo:
+
+## 1. Instale o Ollama
+
+**macOS** (via Homebrew):
+```bash
+brew install ollama
+```
+Ou baixe o instalador direto em [ollama.com/download](https://ollama.com/download).
+
+**Windows:**
+Baixe e execute o instalador em [ollama.com/download](https://ollama.com/download).
+
+**Linux:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+## 2. Inicie o serviço do Ollama
+
+**macOS (Homebrew):**
+```bash
+brew services start ollama
+```
+
+**Ou manualmente (qualquer sistema), em um terminal separado:**
+```bash
+ollama serve
+```
+
+> No Windows e no macOS (instalador padrão), o Ollama costuma já rodar em segundo plano automaticamente após a instalação — nesse caso não é necessário rodar `ollama serve` manualmente.
+
+## 3. Baixe o modelo usado pelo Henry
+
+O projeto está configurado para usar o `llama3.1:8b` (ver `src/pages/Assistant/index.tsx`, constante `OLLAMA_MODEL`):
+
+```bash
+ollama pull llama3.1:8b
+```
+
+> Esse modelo tem ~4.7 GB e exige pelo menos 8 GB de RAM livre para rodar com folga (recomendado 16 GB). Se sua máquina tiver mais RAM disponível, o modelo `qwen2.5:14b` tende a ter um desempenho ainda melhor em português — mas para trocar, é preciso também atualizar a constante `OLLAMA_MODEL` no código.
+
+## 4. Confirme que está tudo funcionando
+
+Com o serviço ativo e o modelo baixado, teste diretamente no terminal:
+
+```bash
+ollama run llama3.1:8b "Olá, tudo bem?"
+```
+
+Se responder normalmente, está pronto. Rode o front-end (`npm run dev`), acesse a página **Henry** (`/assistant`) e mande uma mensagem.
+
+## 5. Solução de problemas
+
+- **"Não consegui falar com o modelo local (Ollama)"** (mensagem exibida no chat): confirme que o serviço está ativo (`ollama serve` ou `brew services start ollama`) e que a porta padrão `11434` não está sendo usada por outro processo.
+- **Modelo não encontrado:** rode `ollama list` para conferir os modelos baixados; se `llama3.1:8b` não aparecer, rode `ollama pull llama3.1:8b` novamente.
+- **Resposta muito lenta:** normal em máquinas com pouca RAM/CPU — o modelo roda localmente, então o desempenho depende do hardware. Considere um modelo menor (ex.: `llama3.2:3b`) se a máquina for mais limitada.
+- O Henry funciona **por navegador/dispositivo**: o Ollama precisa estar rodando na mesma máquina de quem está acessando a página (não há um servidor compartilhado).
+
+---
+
+# 📰 Notícias da Semana e Central de Alertas
+
+## Notícias da Semana (Dashboard)
+
+Busca **ao vivo** (sem snapshot, diferente do resto do app) em três fontes de imprensa/indústria automotiva:
+
+- **AutoData** (RSS oficial, com data por item);
+- **AutoForum** (RSS, sem link direto por item — limitação do parser da fonte, avisada na própria interface);
+- **Automotive Business** (sem RSS funcional — extrai a seção "Últimas Notícias" da home).
+
+Como nenhuma das três libera CORS para fetch direto do navegador, a leitura passa pelo `r.jina.ai` (leitor de página público e gratuito). Um filtro de palavras-chave (marca, modelo, termos do setor) garante que só entrem notícias realmente relacionadas a automóveis. Os resultados ficam em cache por 30 minutos (compartilhado entre Dashboard e Central de Alertas) para evitar buscas repetidas.
+
+## Central de Alertas
+
+Os alertas deixaram de ser uma lista fixa e passaram a ser **calculados a partir dos dados reais** do Radar e das vendas:
+
+- Queda relevante no volume de coleta;
+- Marca em alta ou queda forte de vendas;
+- Descobertas de alta confiança;
+- Principais notícias da semana (mesma fonte da seção acima), com link direto para a matéria original.
+
+---
+
+# 🔐 Confiabilidade de Fontes
+
+Todo dado apresentado pelo Henry (ou usado nos alertas/dashboard) é rastreável a uma fonte. O registro de fontes confiáveis (`trustedSources.ts`) combina duas camadas:
+
+1. **Lista curada**: grandes veículos de comunicação (G1, UOL, R7/Band) e as bases técnicas já usadas no pipeline OSINT (Wikipedia, EV Database, iCarros, Webmotors, Motor1, CarrosNaWeb, FlatOut, AutoPapo);
+2. **Lista aprendida**: cresce apenas quando o próprio usuário aprova manualmente uma fonte ainda não confiável (botão "Confiar nesta fonte"), salva no `localStorage` do navegador.
+
+Nenhuma fonte vira confiável automaticamente só por aparecer em uma busca ou em um link enviado — isso evita que uma fonte comprometida ou de baixa qualidade se autodeclare confiável.
 
 ---
 
@@ -323,15 +573,15 @@ npm run preview
 
 # 🧪 Futuras Implementações
 
-* [ ] Integração com banco de dados;
-* [ ] Integração com APIs automotivas;
-* [ ] Sistema real de autenticação;
+* [x] Web scraping automatizado (pipeline OSINT em Python, 11 fontes, ficha técnica + vendas);
+* [x] Integração com IA generativa (Henry, via Ollama local);
+* [x] Sistema de notificações (Central de Alertas dinâmica);
+* [x] Exportação de relatórios (CSV: ranking de vendas, faturamento por marca, vendas regionais);
+* [ ] Integração com banco de dados (hoje os dados são JSON estático gerado pelo pipeline Python);
+* [ ] Integração com APIs oficiais automotivas (hoje via scraping de fontes públicas);
+* [ ] Sistema real de autenticação (backend próprio);
 * [ ] Dashboard analítico completo;
-* [ ] Integração com IA generativa;
-* [ ] Sistema de notificações;
-* [ ] Web scraping automatizado;
-* [ ] Sistema de permissões;
-* [ ] Exportação de relatórios.
+* [ ] Sistema de permissões (perfis de acesso).
 
 ---
 

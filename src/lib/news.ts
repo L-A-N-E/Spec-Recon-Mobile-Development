@@ -37,6 +37,32 @@ export type NewsItem = {
 const FETCH_TIMEOUT_MS = 12000
 const CACHE_TTL_MS = 30 * 60 * 1000 // 30min - notícia nao muda a cada segundo
 
+// AutoForum e' fórum de SOM automotivo, nao portal de noticia - sem isso
+// o feed mistura post de audio/subwoofer com noticia de carro de verdade.
+// Filtro por palavra-chave no titulo (marca, modelo ou termo do setor)
+// aplicado nos 3 parsers pra garantir que so entre noticia sobre carro.
+const CAR_KEYWORDS = [
+    "carro", "carros", "automóvel", "automóveis", "automotivo", "automotiva",
+    "veículo", "veículos", "suv", "sedan", "hatch", "picape", "caminhonete",
+    "elétrico", "híbrido", "motor", "motorização", "montadora",
+    "concessionária", "lançamento", "recall", "emplacamento", "pickup",
+    "volkswagen", "chevrolet", "toyota", "honda", "hyundai", "renault",
+    "nissan", "ford", "jeep", "bmw", "mercedes", "audi", "peugeot",
+    "citroën", "citroen", "kia", "mitsubishi", "volvo", "byd", "caoa",
+    "ram", "porsche", "land rover", "chery", "gwm", "fiat",
+]
+
+const DIACRITICS_PATTERN = new RegExp("[̀-ͯ]", "g")
+
+function normalize(text: string): string {
+    return text.toLowerCase().normalize("NFD").replace(DIACRITICS_PATTERN, "")
+}
+
+function isCarRelated(title: string): boolean {
+    const normalized = normalize(title)
+    return CAR_KEYWORDS.some((keyword) => normalized.includes(normalize(keyword)))
+}
+
 const SOURCES = [
     { name: "AutoData", url: "https://www.autodata.com.br/feed/", kind: "rss" as const, fallbackUrl: "https://www.autodata.com.br/" },
     { name: "AutoForum", url: "https://autoforum.com.br/rss/1-rss.xml/", kind: "rss" as const, fallbackUrl: "https://autoforum.com.br/" },
@@ -76,6 +102,8 @@ function parseRssMarkdown(markdown: string, source: string, maxItems: number, fa
 
     while (items.length < maxItems && (match = headingPattern.exec(markdown))) {
         const title = match[1].trim()
+        if (!isCarRelated(title)) continue
+
         const link = match[2].trim()
 
         // a data de cada item fica logo depois do titulo no markdown do
@@ -116,8 +144,10 @@ function parseHomeHeadlines(markdown: string, source: string, maxItems: number):
 
     while (items.length < maxItems && (match = pattern.exec(section))) {
         const url = match[2].trim()
+        const title = match[1].trim()
         if (url.includes("/conteudo-de-marca/") || url.includes("/opiniao/")) continue
-        items.push({ title: match[1].trim(), url, source, publishedAt: null })
+        if (!isCarRelated(title)) continue
+        items.push({ title, url, source, publishedAt: null })
     }
 
     return items

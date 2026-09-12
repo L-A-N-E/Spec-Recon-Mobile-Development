@@ -25,8 +25,6 @@
     <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white">
 </p>
 
-> **Nota:** este arquivo é uma cópia de trabalho do `README.md`, com as novidades implementadas ao longo do desenvolvimento (Radar com dados reais, Henry rodando localmente via Ollama, notícias/alertas ao vivo, exportação de dados). Sirva como preview antes de promover o conteúdo para o `README.md` oficial.
-
 ---
 
 # 📚 Sumário

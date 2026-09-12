@@ -264,6 +264,17 @@ function NotificationModal({
                                             <p className="mt-1 text-sm text-white/45 leading-relaxed break-words">
                                                 {alert.desc}
                                             </p>
+
+                                            {alert.url && (
+                                                <a
+                                                    href={alert.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="mt-2 inline-block text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                                                >
+                                                    Ler notícia completa
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

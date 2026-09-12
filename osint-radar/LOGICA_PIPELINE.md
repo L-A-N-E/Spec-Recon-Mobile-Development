@@ -53,7 +53,7 @@ export, merge) já funciona pra ela.
 | EV Database | sitemap.xml público do site, casado por slug (`locate_evdatabase`) | tabelas de 2 colunas sem `<th>` |
 | iCarros | DuckDuckGo restrito ao domínio | parser **dedicado**, validado contra HTML real: `<div class="technical-sheet-item">` com 2 `<span>` (label/valor) |
 | Webmotors | DuckDuckGo restrito ao domínio | `parse_br_generic_specs` — mas o domínio **confirmou bloqueio anti-bot** ao vivo (resposta 200 com corpo "Access to this page has been denied"); não espere campos daqui sem headless browser |
-| UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut, Best Cars, AutoPapo | DuckDuckGo restrito ao domínio | `parse_br_generic_specs` — genérico, 4 estratégias em cascata (tabela th/td → tabela 2 colunas → `dl/dt/dd` → texto solto "Label: Valor") |
+| UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut, AutoPapo | DuckDuckGo restrito ao domínio | `parse_br_generic_specs` — genérico, 4 estratégias em cascata (tabela th/td → tabela 2 colunas → `dl/dt/dd` → texto solto "Label: Valor") |
 
 Quatro Rodas (`quatrorodas.abril.com.br`) foi **removida** da lista: checagem
 ao vivo em 2026-09-11 mostrou que virou revista digital fechada (Abril

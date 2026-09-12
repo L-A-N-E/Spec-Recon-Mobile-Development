@@ -10,7 +10,7 @@ O que faz:
   2. Localiza uma pagina relevante em cada fonte publica configurada
      (Wikipedia, EV Database e um grupo de sites .br - iCarros, Webmotors,
      Quatro Rodas, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb,
-     FlatOut, Best Cars, AutoPapo, G1, R7, Band) usando busca por texto.
+     FlatOut, AutoPapo, G1, R7, Band) usando busca por texto.
   3. Faz o parse das especificacoes tecnicas publicadas (tabelas/infobox).
   4. Categoriza cada especificacao (Bateria, Powertrain, Software,
      Aerodinamica, Materiais...) e marca se bate com as palavras-chave.
@@ -23,7 +23,7 @@ IMPORTANTE - escopo desta PoC:
     proxy/anti-bot, tratamento de erro minimo). Nao usar em producao
     como esta.
   - Os sites .br (UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb,
-    FlatOut, Best Cars, AutoPapo) foram cadastrados SEM validacao de rede
+    FlatOut, AutoPapo) foram cadastrados SEM validacao de rede
     ao vivo completa (checagem feita em 2026-09-11 confirmou que o dominio
     responde e que o DuckDuckGo tem paginas indexadas desses sites, mas
     NAO foi possivel confirmar o parser campo a campo nessa mesma sessao
@@ -46,6 +46,10 @@ IMPORTANTE - escopo desta PoC:
     mesmo, mas materias especificas (ex.: recapitulacoes mensais de vendas
     Fenabrave) continuam publicas e com tabela raspavel - a home nao e'
     representativa do site inteiro. RE-REGISTRADO abaixo.
+  - Best Cars (bestcars.com.br): REMOVIDO de SOURCES em 2026-09-12 apos
+    confirmar ao vivo que o dominio foi vendido/reaproveitado - hoje
+    redireciona (301, seguindo o redirect) pra autolivraria.com.br, uma
+    livraria sem nenhuma relacao com carros. Nao ha mais o que raspar ali.
   - Para adicionar mais sites, basta incluir uma nova entrada na lista
     SOURCES no final do arquivo (uma funcao `locate_*` que acha a URL e
     uma funcao `parse_*` que extrai um dict {campo: valor}).
@@ -79,7 +83,7 @@ from bs4 import BeautifulSoup
 # Config
 # --------------------------------------------------------------------------
 
-MAX_SOURCES = 15  # Wikipedia + EV Database + 13 sites .br (ver SOURCES no final)
+MAX_SOURCES = 14  # Wikipedia + EV Database + 12 sites .br (ver SOURCES no final)
 
 HEADERS = {
     "User-Agent": (
@@ -118,9 +122,27 @@ def _norm(text: str) -> str:
 
 
 def fetch_html(url: str, retries: int = 1) -> str | None:
+    """Busca uma pagina com retry. 429 (rate limit) e tratado a parte do
+    erro generico: em vez do backoff fixo de 2s (bom pra timeout transiente),
+    espera bem mais (15s, 30s, 45s...) porque um site que devolve 429
+    normalmente esta aplicando um limite por janela de tempo (ex.: N
+    requisicoes por minuto) - insistir rapido so mantem a mesma janela
+    bloqueada. Confirmado ao vivo contra ev-database.org: sem essa espera
+    maior, uma rodada do catalogo inteiro (239 veiculos) toma 429 na
+    primeira ou segunda chamada e essa fonte fica em 0 linhas pro resto do
+    processo (nao ha Retry-After no header dessa API, entao a espera aqui e
+    uma estimativa, nao um valor garantido pelo servidor)."""
     for attempt in range(retries + 1):
         try:
             resp = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+            if resp.status_code == 429:
+                if attempt < retries:
+                    wait = 15 * (attempt + 1)
+                    print(f"  [!] 429 (rate limited) em {url} - aguardando {wait}s antes de tentar de novo")
+                    time.sleep(wait)
+                    continue
+                print(f"  [!] 429 (rate limited) em {url} - desistindo apos {retries + 1} tentativa(s)")
+                return None
             resp.raise_for_status()
             return resp.text
         except requests.RequestException as exc:
@@ -129,24 +151,33 @@ def fetch_html(url: str, retries: int = 1) -> str | None:
                 continue
             print(f"  [!] falha ao buscar {url}: {exc}")
             return None
+    return None
 
 
 _DDG_BLOCK_MARKERS = ("bots use duckduckgo too", "select all squares")
 
 # Circuit breaker: depois de algumas falhas SEGUIDAS (timeout de rede ou
-# CAPTCHA), assume que o DuckDuckGo esta inacessivel dessa rede pro resto
-# do processo e para de tentar - sem isso, um catalogo de 239 veiculos x 9
-# fontes .br vira ~9 tentativas x ate 30s (timeout+retry) POR VEICULO
-# mesmo sabendo que vai falhar, o que transforma um run de minutos em um
-# run de horas sem nenhum dado novo. Confirmado na pratica em 2026-09-11:
-# rede de sandbox/datacenter levou o DDG de "CAPTCHA ocasional" pra
-# "timeout de conexao" (nem chega a responder) depois de algumas dezenas
-# de chamadas na mesma sessao. Isso e por-processo (reseta a cada run) -
-# se rodar de novo depois, ou de outra rede, tenta normalmente nas
-# primeiras chamadas.
+# CAPTCHA), assume que o DuckDuckGo esta temporariamente bloqueando essa
+# rede e PAUSA por um cooldown em vez de insistir - sem isso, um catalogo
+# de 239 veiculos x 13 fontes .br vira ~13 tentativas x ate 30s
+# (timeout+retry) POR VEICULO mesmo sabendo que vai falhar.
+#
+# ATUALIZADO em 2026-09-12: a versao anterior desativava o DDG PRA SEMPRE
+# (pro resto do processo) apos so 3 falhas seguidas - na pratica isso e o
+# que explicava o dataset final vir com 100% das linhas so da Wikipedia
+# (confirmado: as 13 fontes .br dependem do DDG pra localizar a pagina, e
+# um catalogo de 239 veiculos dispara varias dezenas de chamadas nos
+# primeiros veiculos, tempo suficiente pra bater o threshold e desligar
+# todo o resto da rodada). Agora o circuito FECHA DE NOVO sozinho apos um
+# cooldown (`_DDG_COOLDOWN_SECONDS`) em vez de desistir pro resto do
+# processo - um bloqueio momentaneo nao devia custar as ~230 fontes .br
+# restantes do catalogo. Tambem aumentamos o intervalo entre chamadas (ver
+# uso de `time.sleep` no build_dataset.py/osint_radar.py) pra reduzir a
+# chance de disparar o CAPTCHA logo de cara.
 _DDG_FAILURE_THRESHOLD = 3
+_DDG_COOLDOWN_SECONDS = 90
 _ddg_consecutive_failures = 0
-_ddg_disabled = False
+_ddg_disabled_until = 0.0  # time.monotonic() ate quando pausar; 0 = nao pausado
 
 
 def duckduckgo_search(query: str, site: str | None = None, max_results: int = 8) -> list[str]:
@@ -168,13 +199,13 @@ def duckduckgo_search(query: str, site: str | None = None, max_results: int = 8)
     anti-bot de terceiro) - se isso disparar toda hora num run grande,
     a saida e espacar mais as chamadas, rodar em lotes menores, ou trocar
     a estrategia de localizacao (busca propria do site / outro buscador)
-    para as fontes mais afetadas. Ver `_DDG_FAILURE_THRESHOLD` acima: depois
-    de poucas falhas seguidas (timeout OU captcha) o circuito abre e para
-    de tentar pro resto do processo, pra nao desperdicar horas repetindo
-    uma chamada que ja sabemos que vai falhar."""
-    global _ddg_consecutive_failures, _ddg_disabled
+    para as fontes mais afetadas. Ver `_DDG_FAILURE_THRESHOLD`/
+    `_DDG_COOLDOWN_SECONDS` acima: depois de poucas falhas seguidas
+    (timeout OU captcha) o circuito abre e PAUSA por um cooldown (nao
+    desiste pro resto do processo - fecha sozinho depois)."""
+    global _ddg_consecutive_failures, _ddg_disabled_until
 
-    if _ddg_disabled:
+    if time.monotonic() < _ddg_disabled_until:
         return []
 
     q = f"site:{site} {query}" if site else query
@@ -186,16 +217,16 @@ def duckduckgo_search(query: str, site: str | None = None, max_results: int = 8)
         html = fetch_html(url)  # resposta suspeita de rate limit, tenta de novo
 
     def _register_failure(reason: str) -> None:
-        global _ddg_consecutive_failures, _ddg_disabled
+        global _ddg_consecutive_failures, _ddg_disabled_until
         _ddg_consecutive_failures += 1
-        if _ddg_consecutive_failures >= _DDG_FAILURE_THRESHOLD and not _ddg_disabled:
-            _ddg_disabled = True
+        if _ddg_consecutive_failures >= _DDG_FAILURE_THRESHOLD:
+            _ddg_disabled_until = time.monotonic() + _DDG_COOLDOWN_SECONDS
+            _ddg_consecutive_failures = 0
             print(
-                f"  [!] DuckDuckGo: {_ddg_consecutive_failures} falhas seguidas "
-                f"({reason}) - assumindo que esta inacessivel nesta rede e "
-                "PARANDO de tentar fontes via DDG pro resto desta rodada "
-                "(as fontes Wikipedia/EV Database continuam normalmente). "
-                "Rode de novo depois, ou de outra rede, pra completar essas fontes."
+                f"  [!] DuckDuckGo: {_DDG_FAILURE_THRESHOLD} falhas seguidas "
+                f"({reason}) - pausando fontes via DDG por {_DDG_COOLDOWN_SECONDS}s "
+                "(Wikipedia/EV Database continuam normalmente). Volta sozinho "
+                "depois do cooldown."
             )
 
     if not html:
@@ -464,7 +495,7 @@ def parse_evdatabase_specs(html: str) -> dict[str, str]:
 
 # --------------------------------------------------------------------------
 # Fontes .br (iCarros, Webmotors, UOL Carros, Autoesporte, Motor1 Brasil,
-# CarrosNaWeb, FlatOut, Best Cars, AutoPapo)
+# CarrosNaWeb, FlatOut, AutoPapo)
 # --------------------------------------------------------------------------
 #
 # Sem sitemap publico nem API de busca proprios (ao contrario do EV
@@ -548,10 +579,6 @@ def locate_carrosnaweb(query: str) -> str | None:
 
 def locate_flatout(query: str) -> str | None:
     return duckduckgo_first_result(f"{query} ficha tecnica", site="flatout.com.br")
-
-
-def locate_bestcars(query: str) -> str | None:
-    return duckduckgo_first_result(f"{query} ficha tecnica", site="bestcars.com.br")
 
 
 def locate_autopapo(query: str) -> str | None:
@@ -659,7 +686,13 @@ def parse_br_generic_specs(html: str) -> dict[str, str]:
 
 SOURCES = [
     {"name": "Wikipedia", "locate": locate_wikipedia, "parse": parse_wikipedia_infobox},
-    {"name": "EV Database", "locate": locate_evdatabase, "parse": parse_evdatabase_specs},
+    # delay/retries maiores so pra essa fonte: ev-database.org aplica rate
+    # limit por sessao/IP (HTTP 429, sem header Retry-After) bem mais
+    # agressivo que os outros sites - confirmado ao vivo em 2026-09-12 que
+    # o intervalo padrao de 1.5s entre fontes nao e suficiente e a fonte
+    # acaba em 0 linhas no dataset inteiro. "retries" usa o backoff de 15s/
+    # 30s/45s ja implementado em fetch_html().
+    {"name": "EV Database", "locate": locate_evdatabase, "parse": parse_evdatabase_specs, "delay": 8.0, "retries": 2},
     {"name": "iCarros", "locate": locate_icarros, "parse": parse_icarros_specs},
     {"name": "Webmotors", "locate": locate_webmotors, "parse": parse_br_generic_specs},
     {"name": "Quatro Rodas", "locate": locate_quatrorodas, "parse": parse_br_generic_specs},
@@ -668,7 +701,6 @@ SOURCES = [
     {"name": "Motor1 Brasil", "locate": locate_motor1, "parse": parse_br_generic_specs},
     {"name": "CarrosNaWeb", "locate": locate_carrosnaweb, "parse": parse_br_generic_specs},
     {"name": "FlatOut", "locate": locate_flatout, "parse": parse_br_generic_specs},
-    {"name": "Best Cars", "locate": locate_bestcars, "parse": parse_br_generic_specs},
     {"name": "AutoPapo", "locate": locate_autopapo, "parse": parse_br_generic_specs},
     {"name": "G1", "locate": locate_g1, "parse": parse_br_generic_specs},
     {"name": "R7", "locate": locate_r7, "parse": parse_br_generic_specs},
@@ -720,7 +752,7 @@ def run_scan(target: str, model: str, keywords_csv: str) -> pd.DataFrame:
     all_rows: list[dict] = []
     for i, source in enumerate(SOURCES[:MAX_SOURCES]):
         if i > 0:
-            time.sleep(1.5)  # a maioria das fontes .br usa DuckDuckGo p/ localizar a pagina; evita rate limit em rajada
+            time.sleep(source.get("delay", 2.5))  # a maioria das fontes .br usa DuckDuckGo p/ localizar a pagina; evita rate limit em rajada
         name = source["name"]
         print(f"[*] Fonte: {name} -> localizando pagina...")
         url = source["locate"](query)
@@ -729,7 +761,7 @@ def run_scan(target: str, model: str, keywords_csv: str) -> pd.DataFrame:
             continue
 
         print(f"    -> {url}")
-        html = fetch_html(url)
+        html = fetch_html(url, retries=source.get("retries", 1))
         if not html:
             continue
 

@@ -50,14 +50,16 @@ const vehicleSpecs = rawVehicleSpecs as OsintVehicleSpec[]
 // coletar, isso e' o SOURCES do osint_radar.py). O campo `live` aqui e'
 // so informativo (badge "Ativo" vs "Beta" na UI): Wikipedia, EV Database
 // e iCarros tem parser validado contra HTML real e retornam dado hoje;
-// Webmotors, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut,
-// Best Cars e AutoPapo estao cadastradas no osint_radar.py (localizacao
-// via DuckDuckGo, parser generico best-effort) mas sem confirmacao campo
-// a campo - o DDG bloqueia com CAPTCHA (ou some de vez, dependendo da
-// rede) depois de poucas chamadas em sequencia. Webmotors especificamente
-// ja teve bloqueio anti-bot CONFIRMADO (pagina "Access denied"). Quatro
-// Rodas foi removida de vez do osint_radar.py (virou revista digital
-// fechada, sem ficha tecnica raspavel). Patentes/foruns/imprensa/
+// Webmotors, UOL Carros, Autoesporte, Motor1 Brasil, CarrosNaWeb, FlatOut
+// e AutoPapo estao cadastradas no osint_radar.py (localizacao via
+// DuckDuckGo, parser generico best-effort) mas sem confirmacao campo a
+// campo - o DDG bloqueia com CAPTCHA (ou some de vez, dependendo da rede)
+// depois de poucas chamadas em sequencia. Webmotors especificamente ja
+// teve bloqueio anti-bot CONFIRMADO (pagina "Access denied"). Quatro Rodas
+// foi removida de vez do osint_radar.py (virou revista digital fechada,
+// sem ficha tecnica raspavel); Best Cars tambem foi removida (dominio
+// vendido, hoje redireciona pra uma livraria sem relacao com carros).
+// Patentes/foruns/imprensa/
 // reguladores/social no fim da lista sao roadmap puro - sem locate/parse
 // no Python ainda, entao selecionar so fica sem efeito (nenhuma linha
 // tem esse `source`).
@@ -140,14 +142,6 @@ export const OSINT_SOURCES: SourceMeta[] = [
     {
         id: "flatout",
         label: "FlatOut",
-        classification: "Imprensa / Ficha técnica (BR)",
-        reliability: 2,
-        live: false,
-        note: "Cobertura ainda não validada — pode não retornar resultados agora.",
-    },
-    {
-        id: "best_cars",
-        label: "Best Cars",
         classification: "Imprensa / Ficha técnica (BR)",
         reliability: 2,
         live: false,
@@ -402,6 +396,7 @@ export function getCategoryDistribution(): { category: string; count: number }[]
         .sort((a, b) => b.count - a.count)
 }
 
+
 export function getSourceDistribution(): { source: string; count: number; pct: number }[] {
     const counts = new Map<string, number>()
     for (const row of discoveries) {
@@ -478,20 +473,33 @@ function extractKeywords(query: string): string[] {
         .filter((w) => w.length >= 4 && !STOPWORDS.has(w))
 }
 
-export function buildOsintContext(query: string, maxRows = 12): string {
-    const q = norm(query)
-    const keywords = extractKeywords(query)
+/** Fonte (nome + link quando existir) que alimentou o contexto local
+ * devolvido por buildOsintContext - usado pelo Assistant (Henry) pra
+ * SEMPRE mostrar na conversa qual fonte esta por tras da resposta, mesmo
+ * quando o dado vem do dataset local (nao so no fallback de busca web).
+ * Pedido explicito do usuario: "mostrar sempre qual fonte esta sendo
+ * consultada". */
+export type OsintContextSource = { label: string; url?: string }
 
+function relevantVehiclesFor(query: string): OsintVehicleSpec[] {
+    const q = norm(query)
     // tenta achar um MODELO especifico citado na pergunta (ex.: "BYD Dolphin"
     // ou so "Dolphin") - da mais precisao do que so bater a marca, que hoje
     // pode ter varios modelos coletados
     const mentionedVehicles = vehicleSpecs.filter((v) => q.includes(norm(v.model)))
     const mentionedTargets = TARGETS.filter((t) => q.includes(norm(t.target)))
 
-    const relevantVehicles =
-        mentionedVehicles.length > 0
-            ? mentionedVehicles
-            : mentionedTargets.flatMap((t) => getModelsForTarget(t.target))
+    return mentionedVehicles.length > 0
+        ? mentionedVehicles
+        : mentionedTargets.flatMap((t) => getModelsForTarget(t.target))
+}
+
+function relevantDiscoveriesFor(
+    query: string,
+    relevantVehicles: OsintVehicleSpec[],
+    maxRows: number
+): OsintDiscoveryScored[] {
+    const keywords = extractKeywords(query)
 
     // Sem marca/modelo citado, so faz sentido puxar descobertas se alguma
     // REALMENTE bate por palavra-chave (`keywordMatch`) - sem essa trava,
@@ -499,12 +507,16 @@ export function buildOsintContext(query: string, maxRows = 12): string {
     // do dataset INTEIRO (keywords so afeta ordenacao, nao filtra), o que
     // injetava ruido nao relacionado a pergunta (ex.: pergunta sobre um
     // assunto fora do catalogo puxava specs aleatorias de outro carro).
-    const rows =
-        relevantVehicles.length > 0
-            ? relevantVehicles.flatMap((v) => getDiscoveries({ target: v.target, model: v.model, keywords }).slice(0, maxRows))
-            : keywords.length > 0
-                ? getDiscoveries({ keywords }).filter((r) => r.keywordMatch).slice(0, maxRows)
-                : []
+    return relevantVehicles.length > 0
+        ? relevantVehicles.flatMap((v) => getDiscoveries({ target: v.target, model: v.model, keywords }).slice(0, maxRows))
+        : keywords.length > 0
+            ? getDiscoveries({ keywords }).filter((r) => r.keywordMatch).slice(0, maxRows)
+            : []
+}
+
+export function buildOsintContext(query: string, maxRows = 12): string {
+    const relevantVehicles = relevantVehiclesFor(query)
+    const rows = relevantDiscoveriesFor(query, relevantVehicles, maxRows)
 
     const specLines = relevantVehicles.map(
         (v) =>
@@ -517,6 +529,25 @@ export function buildOsintContext(query: string, maxRows = 12): string {
 
     const context = [...specLines, ...discoveryLines].join("\n")
     return context || NO_OSINT_CONTEXT
+}
+
+/** Fontes (Wikipedia/EV Database/sites .br) que alimentaram o contexto
+ * local pra essa pergunta - mesma logica de selecao de buildOsintContext,
+ * so que devolvendo METADADO de fonte em vez do texto pronto pro prompt. */
+export function getOsintContextSources(query: string, maxRows = 12): OsintContextSource[] {
+    const relevantVehicles = relevantVehiclesFor(query)
+    const rows = relevantDiscoveriesFor(query, relevantVehicles, maxRows)
+
+    const sources = new Map<string, OsintContextSource>()
+    for (const v of relevantVehicles) {
+        if (v.wikipedia_url) sources.set(v.wikipedia_url, { label: "Wikipedia", url: v.wikipedia_url })
+        if (v.evdatabase_url) sources.set(v.evdatabase_url, { label: "EV Database", url: v.evdatabase_url })
+    }
+    for (const r of rows) {
+        const key = r.source_url || r.source
+        if (!sources.has(key)) sources.set(key, { label: r.source, url: r.source_url })
+    }
+    return [...sources.values()]
 }
 
 /** Sentinela devolvida por buildOsintContext quando nada bate com a

@@ -12,23 +12,35 @@ import {
     ShieldQuestion,
 } from "lucide-react"
 
-import { buildOsintContext, NO_OSINT_CONTEXT } from "../../lib/osint"
-import { buildSalesContext } from "../../lib/sales"
+import { buildOsintContext, getOsintContextSources, NO_OSINT_CONTEXT } from "../../lib/osint"
+import { buildSalesContext, getSalesContextSources } from "../../lib/sales"
 import { webSearchFallback } from "../../lib/webSearch"
+import { extractUrl, fetchUserProvidedSource } from "../../lib/sourceCheck"
 import { learnTrustedDomain } from "../../lib/trustedSources"
 
 import agentsDoc from "../../AGENTS.md?raw"
 
+/** Fonte que embasou uma resposta do Henry - "local" (dataset OSINT/vendas
+ * coletado pelo Radar), "web" (fallback de busca quando o dado local nao
+ * cobria a pergunta) ou "user" (link que o PRÓPRIO usuário mandou na
+ * mensagem - conferido sempre, ver lib/sourceCheck.ts). `trusted` vem do
+ * registro de fontes confiaveis (lib/trustedSources.ts) - "sistema de
+ * aprendizado": fonte nao confiavel ganha um botao pro usuario aprovar
+ * manualmente, nunca confia sozinha so por aparecer numa busca/link. */
+type Citation = {
+    label: string
+    url?: string
+    trusted: boolean
+    kind: "local" | "web" | "user"
+}
+
 type MessageType = {
     role: "user" | "assistant"
     content: string
-    /** presente quando a resposta usou o fallback de busca web (nao so dados
-     * locais) - a UI mostra a fonte direto (nao depende do modelo lembrar
-     * de citar no texto, ver AGENTS.md regra 3). `trusted` vem do registro
-     * de fontes confiaveis (lib/trustedSources.ts) - "sistema de
-     * aprendizado": fonte nao confiavel ganha um botao pro usuario aprovar
-     * manualmente, nunca confia sozinha so por aparecer numa busca. */
-    webSource?: { label: string; url: string; trusted: boolean }
+    /** SEMPRE presente quando a resposta usa algum dado (local, busca web
+     * ou link enviado pelo usuário) - pedido explícito do usuário: "mostrar
+     * sempre qual fonte está sendo consultada", não só no fallback web. */
+    citations?: Citation[]
 }
 
 // Modelo rodando localmente via Ollama (gratuito, sem API key - so funciona
@@ -99,12 +111,16 @@ function Assistant() {
         }
     }, [messages])
 
-    function trustSource(messageIndex: number) {
+    function trustSource(messageIndex: number, citationIndex: number) {
         setMessages((prev) =>
             prev.map((m, i) => {
-                if (i !== messageIndex || !m.webSource) return m
-                learnTrustedDomain(m.webSource.url)
-                return { ...m, webSource: { ...m.webSource, trusted: true } }
+                if (i !== messageIndex || !m.citations) return m
+                const citation = m.citations[citationIndex]
+                if (!citation?.url) return m
+                learnTrustedDomain(citation.url)
+                const citations = [...m.citations]
+                citations[citationIndex] = { ...citation, trusted: true }
+                return { ...m, citations }
             })
         )
     }
@@ -121,21 +137,30 @@ function Assistant() {
     async function generateResponse(
         text: string,
         history: MessageType[]
-    ): Promise<{ content: string; webSource?: { label: string; url: string; trusted: boolean } }> {
+    ): Promise<{ content: string; citations: Citation[] }> {
 
         const osintContext = buildOsintContext(text)
         const salesContext = buildSalesContext(text)
 
         const localDataFound = osintContext !== NO_OSINT_CONTEXT || salesContext !== ""
 
-        let webBlock = ""
-        let webSource: { label: string; url: string; trusted: boolean } | undefined
+        const citations: Citation[] = []
 
+        if (localDataFound) {
+            for (const s of getOsintContextSources(text)) {
+                citations.push({ label: s.label, url: s.url, trusted: true, kind: "local" })
+            }
+            for (const s of getSalesContextSources(text)) {
+                citations.push({ label: s.label, url: s.url, trusted: true, kind: "local" })
+            }
+        }
+
+        let webBlock = ""
         if (!localDataFound) {
             const webResult = await webSearchFallback(text)
 
             if (webResult) {
-                webSource = { label: webResult.sourceLabel, url: webResult.sourceUrl, trusted: webResult.trusted }
+                citations.push({ label: webResult.sourceLabel, url: webResult.sourceUrl, trusted: webResult.trusted, kind: "web" })
 
                 const trustNote = webResult.trusted
                     ? "fonte confiável (registrada como grande veículo de comunicação ou base técnica)"
@@ -145,13 +170,39 @@ function Assistant() {
             }
         }
 
+        // Fonte enviada pelo PRÓPRIO usuário na mensagem - conferida SEMPRE
+        // que houver link, independente de já haver dado local (pedido
+        // explícito: "sempre que ele enviar uma fonte conferir também
+        // naquele site" e apontar divergência se houver).
+        let userSourceBlock = ""
+        const userUrl = extractUrl(text)
+        if (userUrl) {
+            const userSource = await fetchUserProvidedSource(userUrl)
+
+            if (userSource) {
+                citations.push({ label: userUrl, url: userUrl, trusted: userSource.trusted, kind: "user" })
+
+                const trustNote = userSource.trusted
+                    ? "fonte confiável"
+                    : "ATENÇÃO: fonte NÃO verificada - trate com mais cautela, deixe claro pro usuário que não é uma fonte confiável conhecida"
+
+                userSourceBlock =
+                    `\n\n[LINK ENVIADO PELO USUÁRIO - ${trustNote}]\nURL: ${userUrl}\nConteúdo extraído dessa página:\n${userSource.text}\n\n` +
+                    "Compare essa informação com os dados locais/seu conhecimento acima. Se houver QUALQUER " +
+                    "divergência (números, datas, especificações), aponte isso de forma explícita na resposta, " +
+                    "dizendo os dois valores e qual fonte disse cada um."
+            } else {
+                userSourceBlock = `\n\n[LINK ENVIADO PELO USUÁRIO]\nNão consegui acessar ${userUrl} agora - avise o usuário que não deu pra conferir esse link.`
+            }
+        }
+
         const systemPrompt = `${agentsDoc}
 
 ---
 
 Contexto coletado (dados locais - ficha técnica OSINT e vendas/faturamento Fenabrave):
 ${osintContext}
-${salesContext || "(nenhum dado de vendas/faturamento bate com essa pergunta)"}${webBlock}`
+${salesContext || "(nenhum dado de vendas/faturamento bate com essa pergunta)"}${webBlock}${userSourceBlock}`
 
         const ollamaMessages = [
             { role: "system", content: systemPrompt },
@@ -178,7 +229,7 @@ ${salesContext || "(nenhum dado de vendas/faturamento bate com essa pergunta)"}$
         const content = (data.message?.content as string | undefined)?.trim()
             || "Não consegui gerar uma resposta a partir do modelo local."
 
-        return { content, webSource }
+        return { content, citations }
     }
 
     async function sendMessage(text?: string) {
@@ -204,11 +255,11 @@ ${salesContext || "(nenhum dado de vendas/faturamento bate com essa pergunta)"}$
 
         try {
 
-            const { content: reply, webSource } = await generateResponse(content, history)
+            const { content: reply, citations } = await generateResponse(content, history)
 
             setMessages((prev) => [
                 ...prev,
-                { role: "assistant", content: reply, webSource },
+                { role: "assistant", content: reply, citations },
             ])
 
         } catch {
@@ -412,44 +463,63 @@ ${salesContext || "(nenhum dado de vendas/faturamento bate com essa pergunta)"}$
                                         }
                                     `}
                                 >
-                                    {message.webSource && (
-                                        <div className="flex items-center gap-1.5 mb-2 text-[11px] uppercase tracking-wider text-blue-300/80">
-                                            <Globe className="w-3 h-3" />
-                                            Busca web
-                                            {message.webSource.trusted ? (
-                                                <span className="flex items-center gap-1 text-green-400 normal-case tracking-normal">
-                                                    <BadgeCheck className="w-3 h-3" />
-                                                    fonte confiável
-                                                </span>
-                                            ) : (
-                                                <span className="flex items-center gap-1 text-amber-400 normal-case tracking-normal">
-                                                    <ShieldQuestion className="w-3 h-3" />
-                                                    não verificada
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
                                     {message.content}
-                                    {message.webSource && (
-                                        <div className="mt-3 flex flex-wrap items-center gap-3">
-                                            <a
-                                                href={message.webSource.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-center gap-1.5 text-xs text-blue-300/70 hover:text-blue-300 transition-colors w-fit"
-                                            >
-                                                Fonte: {message.webSource.label}
-                                            </a>
+                                    {message.citations && message.citations.length > 0 && (
+                                        <div className="mt-3 pt-3 border-t border-white/10 flex flex-col gap-2">
+                                            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-blue-300/80">
+                                                <Globe className="w-3 h-3" />
+                                                Fontes consultadas
+                                            </div>
 
-                                            {!message.webSource.trusted && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => trustSource(index)}
-                                                    className="text-xs text-amber-300/80 hover:text-amber-300 underline underline-offset-2 transition-colors cursor-pointer"
+                                            {message.citations.map((citation, citationIndex) => (
+                                                <div
+                                                    key={citationIndex}
+                                                    className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
                                                 >
-                                                    Confiar nesta fonte
-                                                </button>
-                                            )}
+                                                    <span className="text-[10px] uppercase tracking-wide text-white/35">
+                                                        {citation.kind === "local"
+                                                            ? "Dado local"
+                                                            : citation.kind === "user"
+                                                                ? "Link enviado por você"
+                                                                : "Busca web"}
+                                                    </span>
+
+                                                    {citation.url ? (
+                                                        <a
+                                                            href={citation.url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="text-blue-300/70 hover:text-blue-300 transition-colors"
+                                                        >
+                                                            {citation.label}
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-white/60">{citation.label}</span>
+                                                    )}
+
+                                                    {citation.trusted ? (
+                                                        <span className="flex items-center gap-1 text-green-400">
+                                                            <BadgeCheck className="w-3 h-3" />
+                                                            confiável
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1 text-amber-400">
+                                                            <ShieldQuestion className="w-3 h-3" />
+                                                            não verificada
+                                                        </span>
+                                                    )}
+
+                                                    {!citation.trusted && citation.url && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => trustSource(index, citationIndex)}
+                                                            className="text-amber-300/80 hover:text-amber-300 underline underline-offset-2 transition-colors cursor-pointer"
+                                                        >
+                                                            Confiar nesta fonte
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </div>

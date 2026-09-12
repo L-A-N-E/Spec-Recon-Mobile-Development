@@ -3,10 +3,18 @@
 // mockada. Sem isso, "alerta" nao alertava nada - era so texto decorativo
 // que nunca mudava, mesmo quando os numeros reais indicavam algo relevante
 // (queda de coleta, marca em alta/queda forte, sinal de alta confianca).
+//
+// Tambem traz algumas das principais noticias da semana (lib/news.ts,
+// mesma busca ao vivo em AutoData/AutoForum/Automotive Business que
+// alimenta a secao "Noticias da semana" do Dashboard) - pedido explicito
+// do usuario. Usa o MESMO cache em memoria (getWeeklyNewsCached), entao
+// abrir o sino de alertas nao dispara uma busca nova se o Dashboard ja
+// buscou a noticia ha pouco (e vice-versa).
 
 import { useEffect, useMemo, useState } from "react"
 import { getDiscoveryDelta, getTopDiscoveries } from "./osint"
 import { getTopBrandGrowth, SALES_META } from "./sales"
+import { getWeeklyNewsCached } from "./news"
 
 export type AlertSeverity = "critical" | "warning" | "info"
 
@@ -16,7 +24,11 @@ export type Alert = {
     title: string
     desc: string
     time: string
+    /** presente nos alertas de noticia (ver useAlerts) - a UI mostra como link pra ler a materia original */
+    url?: string
 }
+
+const NEWS_ALERTS_COUNT = 2
 
 // abaixo desses limiares o numero e' normal/ruido, nao vira alerta
 const DISCOVERY_DROP_THRESHOLD_PCT = 8
@@ -107,8 +119,37 @@ function writeDismissed(ids: Set<string>) {
 }
 
 export function useAlerts() {
-    const allAlerts = useMemo(() => getAlerts(), [])
+    const signalAlerts = useMemo(() => getAlerts(), [])
+    const [newsAlerts, setNewsAlerts] = useState<Alert[]>([])
     const [dismissed, setDismissed] = useState<Set<string>>(() => readDismissed())
+
+    useEffect(() => {
+        let cancelled = false
+
+        getWeeklyNewsCached()
+            .then((items) => {
+                if (cancelled) return
+                setNewsAlerts(
+                    items.slice(0, NEWS_ALERTS_COUNT).map((n) => ({
+                        id: `news-${n.url}`,
+                        severity: "info",
+                        title: `${n.source}: ${n.title}`,
+                        desc: "Notícia do setor automotivo - clique para ler a matéria completa.",
+                        time: "Notícias da semana",
+                        url: n.url,
+                    }))
+                )
+            })
+            .catch(() => {
+                // falha de rede - alertas derivados dos dados locais continuam normais, so fica sem os de noticia
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    const allAlerts = useMemo(() => [...signalAlerts, ...newsAlerts], [signalAlerts, newsAlerts])
 
     useEffect(() => {
         writeDismissed(dismissed)

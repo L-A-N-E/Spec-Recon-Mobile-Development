@@ -318,3 +318,24 @@ export function buildSalesContext(query: string): string {
 
     return lines.join("\n")
 }
+
+/** Fontes (nome + link) por tras do bloco de vendas/faturamento pra essa
+ * pergunta - mesmo espirito de getOsintContextSources em lib/osint.ts, pro
+ * Assistente (Henry) sempre mostrar qual fonte esta consultando, mesmo
+ * quando o dado vem do dataset local (nao so no fallback de busca web). */
+export function getSalesContextSources(query: string): { label: string; url?: string }[] {
+    const brands = findMentionedBrands(query)
+    if (brands.length === 0) return []
+
+    const sources = new Map<string, { label: string; url?: string }>()
+    sources.set(SALES_META.source_url, { label: SALES_META.source, url: SALES_META.source_url })
+
+    const anyMonthlyLine = brands.some((b) => getMonthlySalesForBrand(b.brand)?.units != null)
+    if (anyMonthlyLine) {
+        for (const s of MONTHLY_SALES_META.sources) {
+            sources.set(s.url, { label: s.name, url: s.url })
+        }
+    }
+
+    return [...sources.values()]
+}

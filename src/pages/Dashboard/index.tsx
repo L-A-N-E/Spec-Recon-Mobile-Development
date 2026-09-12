@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
     TrendingUp,
@@ -40,17 +40,35 @@ import {
     REGIONAL_META,
     getTopMovers,
     getTopSales,
+    getSalesRankings,
     getTopBrandGrowth,
     getTopBrandsByRevenue,
+    getBrandAggregates,
     getRegionAggregates,
     getTopStates,
+    getStateAggregates,
+    type SalesRankingItem,
+    type BrandAggregate,
+    type StateAggregate,
 } from "../../lib/sales"
+
+import { getWeeklyNewsCached, type NewsItem } from "../../lib/news"
 
 function formatBRLCompact(value: number): string {
     if (Math.abs(value) >= 1_000_000_000) return `R$ ${(value / 1_000_000_000).toFixed(1)} bi`
     if (Math.abs(value) >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)} mi`
     if (Math.abs(value) >= 1_000) return `R$ ${(value / 1_000).toFixed(0)} mil`
     return `R$ ${value.toLocaleString("pt-BR")}`
+}
+
+function formatNewsDate(iso: string | null): string {
+    if (!iso) return ""
+    const diffMs = Date.now() - new Date(iso).getTime()
+    const diffHours = Math.round(diffMs / 3_600_000)
+    if (diffHours < 1) return "agora há pouco"
+    if (diffHours < 24) return `há ${diffHours}h`
+    const diffDays = Math.round(diffHours / 24)
+    return diffDays === 1 ? "há 1 dia" : `há ${diffDays} dias`
 }
 
 const TABLE_ROW_LIMIT = 200
@@ -61,10 +79,12 @@ function escapeCsvField(value: string): string {
     return needsQuoting ? `"${escaped}"` : escaped
 }
 
-function exportDiscoveriesToCsv(rows: OsintDiscoveryScored[]) {
-    const header = ["Concorrente", "Modelo", "Categoria", "Campo", "Valor", "Fonte", "Coletado em"]
-
-    const csv = [header, ...rows.map((r) => [r.target, r.model, r.category, r.field, r.value, r.source, r.discovered_at])]
+/** Baixa qualquer lista de linhas como CSV - usado pelas tabelas do
+ * Dashboard (descobertas OSINT, ranking de vendas, faturamento por marca,
+ * vendas por estado). `rows` ja vem no formato final de c\u00E9lula (string),
+ * cada fun\u00E7\u00E3o de export monta suas pr\u00F3prias colunas antes de chamar isso. */
+function downloadCsv(filename: string, header: string[], rows: (string | number)[][]) {
+    const csv = [header, ...rows]
         .map((row) => row.map((cell) => escapeCsvField(String(cell))).join(","))
         .join("\r\n")
 
@@ -74,11 +94,62 @@ function exportDiscoveriesToCsv(rows: OsintDiscoveryScored[]) {
 
     const link = document.createElement("a")
     link.href = url
-    link.download = `spec-recon-osint-${new Date().toISOString().slice(0, 10)}.csv`
+    link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
+}
+
+function exportDiscoveriesToCsv(rows: OsintDiscoveryScored[]) {
+    downloadCsv(
+        "spec-recon-osint",
+        ["Concorrente", "Modelo", "Categoria", "Campo", "Valor", "Fonte", "Coletado em"],
+        rows.map((r) => [r.target, r.model, r.category, r.field, r.value, r.source, r.discovered_at])
+    )
+}
+
+function exportSalesRankingToCsv(rows: SalesRankingItem[]) {
+    downloadCsv(
+        "spec-recon-vendas-ranking",
+        ["Marca", "Modelo", "Ranking atual", "Unidades (atual)", "Ranking anterior", "Unidades (anterior)", "Varia\u00E7\u00E3o unidades", "Varia\u00E7\u00E3o %", "Pre\u00E7o m\u00E9dio estimado (FIPE)"],
+        rows.map((r) => [
+            r.brand,
+            r.model,
+            r.rank_current ?? "",
+            r.units_current ?? "",
+            r.rank_previous ?? "",
+            r.units_previous ?? "",
+            r.delta_units ?? "",
+            r.delta_pct ?? "",
+            r.price_avg_estimate ?? "",
+        ])
+    )
+}
+
+function exportBrandRevenueToCsv(rows: BrandAggregate[]) {
+    downloadCsv(
+        "spec-recon-faturamento-por-marca",
+        ["Marca", "Unidades (atual)", "Unidades (anterior)", "Faturamento estimado (atual)", "Faturamento estimado (anterior)", "Varia\u00E7\u00E3o %", "N\u00BA modelos", "N\u00BA modelos com pre\u00E7o"],
+        rows.map((b) => [
+            b.brand,
+            b.units_current,
+            b.units_previous,
+            b.revenue_current_estimate ?? "",
+            b.revenue_previous_estimate ?? "",
+            b.delta_pct ?? "",
+            b.n_models,
+            b.n_models_with_price,
+        ])
+    )
+}
+
+function exportStatesToCsv(rows: StateAggregate[]) {
+    downloadCsv(
+        "spec-recon-vendas-por-estado",
+        ["UF", "Estado", "Regi\u00E3o", "Unidades"],
+        rows.map((s) => [s.uf, s.name, s.region, s.units])
+    )
 }
 
 function Dashboard() {
@@ -95,6 +166,32 @@ function Dashboard() {
     const regionAggregates = useMemo(() => getRegionAggregates(), [])
     const topStates = useMemo(() => getTopStates(6), [])
     const maxRegionUnits = Math.max(...regionAggregates.map((r) => r.units), 1)
+
+    // Noticias da semana - busca AO VIVO (nao snapshot estatico, ver
+    // lib/news.ts) em AutoData/AutoForum/Automotive Business, pedido
+    // explicito do usuario. Roda no mount do Dashboard; "cancelled" evita
+    // setState depois do componente desmontar (usuario navega pra outra
+    // pagina antes da busca terminar).
+    const [weeklyNews, setWeeklyNews] = useState<NewsItem[] | null>(null)
+    const [weeklyNewsError, setWeeklyNewsError] = useState(false)
+
+    useEffect(() => {
+        let cancelled = false
+
+        getWeeklyNewsCached()
+            .then((items) => {
+                if (cancelled) return
+                if (items.length === 0) setWeeklyNewsError(true)
+                setWeeklyNews(items.slice(0, 5))
+            })
+            .catch(() => {
+                if (!cancelled) setWeeklyNewsError(true)
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
 
     const [tableSearch, setTableSearch] = useState("")
     const [tableTarget, setTableTarget] = useState("Todos")
@@ -344,6 +441,69 @@ function Dashboard() {
                         </div>
                     )
                 })}
+            </div>
+
+            {/* Noticias da semana - busca ao vivo em 3 fontes de imprensa
+                automotiva (AutoData, AutoForum, Automotive Business), ver
+                lib/news.ts. Diferente do Feed Estrategico abaixo (que e'
+                derivado dos DADOS coletados pelo Radar) - aqui e' noticia
+                de verdade, direto dos sites. */}
+            <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden">
+
+                <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
+
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                        <Newspaper className="w-5 h-5 text-blue-400" />
+                    </div>
+
+                    <div>
+                        <h3 className="font-semibold text-white">
+                            Notícias da semana
+                        </h3>
+                        <p className="text-xs text-white/40">
+                            AutoData · AutoForum · Automotive Business
+                        </p>
+                    </div>
+                </div>
+
+                <div className="divide-y divide-white/5">
+
+                    {weeklyNews === null && !weeklyNewsError && (
+                        <div className="px-6 py-8 text-sm text-white/35">
+                            Buscando as últimas notícias...
+                        </div>
+                    )}
+
+                    {weeklyNewsError && (weeklyNews === null || weeklyNews.length === 0) && (
+                        <div className="px-6 py-8 text-sm text-white/35">
+                            Não foi possível buscar notícias agora — tente recarregar a página em instantes.
+                        </div>
+                    )}
+
+                    {weeklyNews?.map((item, i) => (
+                        <a
+                            key={`${item.source}-${i}`}
+                            href={item.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-start justify-between gap-4 px-6 py-4 hover:bg-white/[0.03] transition-colors"
+                        >
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="px-2 py-0.5 rounded-full bg-blue-500/15 text-[10px] text-blue-300 uppercase tracking-wide">
+                                        {item.source}
+                                    </span>
+                                    {item.publishedAt && (
+                                        <span className="text-[11px] text-white/30">{formatNewsDate(item.publishedAt)}</span>
+                                    )}
+                                </div>
+                                <p className="text-sm text-white/80 truncate">{item.title}</p>
+                            </div>
+
+                            <ExternalLink className="w-4 h-4 text-white/25 shrink-0 mt-1" />
+                        </a>
+                    ))}
+                </div>
             </div>
 
             {/* Main Grid - grid de verdade (nao 2 colunas empilhadas
@@ -844,7 +1004,7 @@ function Dashboard() {
                                 <Trophy className="w-5 h-5 text-blue-400" />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <h3 className="font-semibold text-white">
                                     Mais vendidos ({SALES_META.year_current})
                                 </h3>
@@ -852,6 +1012,15 @@ function Dashboard() {
                                     Top 10 por unidades acumuladas no ano
                                 </p>
                             </div>
+
+                            <button
+                                type="button"
+                                onClick={() => exportSalesRankingToCsv(getSalesRankings())}
+                                title="Exportar ranking completo em CSV"
+                                className="ml-auto shrink-0 w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                            >
+                                <Download className="w-4 h-4" />
+                            </button>
                         </div>
 
                         <div className="p-4 space-y-1">
@@ -938,7 +1107,7 @@ function Dashboard() {
                                 <Wallet className="w-5 h-5 text-blue-400" />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <h3 className="font-semibold text-white">
                                     Faturamento estimado por marca
                                 </h3>
@@ -946,6 +1115,15 @@ function Dashboard() {
                                     Preço médio (Tabela FIPE) × unidades — estimativa, não faturamento contábil
                                 </p>
                             </div>
+
+                            <button
+                                type="button"
+                                onClick={() => exportBrandRevenueToCsv(getBrandAggregates())}
+                                title="Exportar faturamento por marca completo em CSV"
+                                className="ml-auto shrink-0 w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                            >
+                                <Download className="w-4 h-4" />
+                            </button>
                         </div>
 
                         <div className="p-4 space-y-1">
@@ -987,7 +1165,7 @@ function Dashboard() {
                                 <MapPin className="w-5 h-5 text-blue-400" />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <h3 className="font-semibold text-white">
                                     Vendas por região
                                 </h3>
@@ -995,6 +1173,15 @@ function Dashboard() {
                                     {REGIONAL_META.month_label} · amostra dos {REGIONAL_META.n_models_sample} modelos mais vendidos do Brasil
                                 </p>
                             </div>
+
+                            <button
+                                type="button"
+                                onClick={() => exportStatesToCsv(getStateAggregates())}
+                                title="Exportar vendas por estado (UF) completo em CSV"
+                                className="ml-auto shrink-0 w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                            >
+                                <Download className="w-4 h-4" />
+                            </button>
                         </div>
 
                         <div className="p-6 space-y-3">

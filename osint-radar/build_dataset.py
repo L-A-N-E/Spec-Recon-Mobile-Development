@@ -565,13 +565,13 @@ def scan_target(brand: str, model: str, search_query: str | None = None) -> dict
         if source["name"] == "Wikipedia":
             continue  # ja tratada acima
 
-        time.sleep(1.5)  # maioria das fontes .br usa DuckDuckGo p/ localizar; evita rate limit em rajada
+        time.sleep(source.get("delay", 2.5))  # maioria das fontes .br usa DuckDuckGo p/ localizar; evita rate limit em rajada
         url = source["locate"](query)
         if not url:
             print(f"    [!] {source['name']}: pagina nao encontrada")
             continue
 
-        html = fetch_html(url)
+        html = fetch_html(url, retries=source.get("retries", 1))
         if not html:
             continue
 
@@ -593,7 +593,7 @@ def scan_target(brand: str, model: str, search_query: str | None = None) -> dict
     for name in (
         "Wikipedia", "EV Database", "iCarros", "Webmotors", "Quatro Rodas",
         "UOL Carros", "Autoesporte", "Motor1 Brasil", "CarrosNaWeb",
-        "FlatOut", "Best Cars", "AutoPapo", "G1", "R7", "Band",
+        "FlatOut", "AutoPapo", "G1", "R7", "Band",
     ):
         merged_specs.update(per_source.get(name, {}).get("specs", {}))
 

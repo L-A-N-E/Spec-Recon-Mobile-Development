@@ -41,7 +41,6 @@ const SEED_TRUSTED_DOMAINS = [
     "motor1.uol.com.br",
     "carrosnaweb.com.br",
     "flatout.com.br",
-    "bestcars.com.br",
     "autopapo.com.br",
 ]
 

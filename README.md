@@ -25,6 +25,16 @@
     <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white">
 </p>
 
+<p align="center">
+    <a href="https://spec-recon-mobile-development.vercel.app/" target="_blank">
+        <img src="https://img.shields.io/badge/Deploy-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="deploy-vercel">
+    </a>
+</p>
+
+<p align="center">
+    🔗 <a href="https://spec-recon-mobile-development.vercel.app/" target="_blank">spec-recon-mobile-development.vercel.app</a>
+</p>
+
 ---
 
 # 📚 Sumário
